@@ -1,0 +1,291 @@
+/* ── 디자인 토큰 ── */
+:root {
+    --bg: #f5f5f7;
+    --card-bg: #ffffff;
+    --text-primary: #1d1d1f;
+    --text-secondary: #86868b;
+    --accent: #0071e3;
+    --accent-green: #34c759;
+    --border: rgba(0,0,0,0.06);
+    --shadow-sm: 0 4px 14px rgba(0,0,0,0.04);
+    --shadow-md: 0 10px 30px rgba(0,0,0,0.07);
+    --r-md: 16px;
+    --r-lg: 24px;
+    --slide-dur: 0.38s;
+    --slide-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                 "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+/* ════════════════════════════════════════════
+   앱 Shell — 슬라이드 라우팅
+════════════════════════════════════════════ */
+.app-shell {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.screen {
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    will-change: transform;
+    transition: transform var(--slide-dur) var(--slide-ease);
+    background: linear-gradient(180deg, #FAFAFC 0%, var(--bg) 100%);
+}
+
+/* 홈: 기본 보임 */
+#screen-home   { transform: translateX(0); }
+/* 상세: 오른쪽 대기 */
+#screen-detail { transform: translateX(100%); }
+
+/* 상세 화면 활성 시 */
+.app-shell.show-detail #screen-home   { transform: translateX(-30%); }
+.app-shell.show-detail #screen-detail { transform: translateX(0); }
+
+/* 화면 전환 중 포인터 이벤트 막기 */
+.app-shell.transitioning * { pointer-events: none; }
+
+/* ════════════════════════════════════════════
+   공통 레이아웃
+════════════════════════════════════════════ */
+.container {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+}
+
+/* ── 홈 헤더 ── */
+.home-header { margin-bottom: 32px; }
+.home-header h1 {
+    font-size: 32px; font-weight: 700;
+    letter-spacing: -0.8px; margin: 0;
+}
+
+/* ── 뒤로가기 헤더 (상세 화면) ── */
+.detail-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 20px 24px 0;
+    max-width: 440px;
+    margin: 0 auto 4px;
+}
+
+.btn-back {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 50%;
+    border: none; background: none;
+    color: var(--accent); cursor: pointer;
+    font-size: 22px; font-weight: 300;
+    transition: background 0.18s;
+    flex-shrink: 0;
+}
+.btn-back:hover { background: rgba(0,113,227,0.08); }
+
+.detail-header-title {
+    font-size: 18px; font-weight: 700;
+    letter-spacing: -0.4px;
+    color: var(--text-primary);
+}
+
+/* ── 배지 (3가지 상태) ── */
+.badge {
+    display: inline-flex; align-items: center;
+    padding: 9px 18px; border-radius: 20px;
+    font-size: 14px; font-weight: 700;
+    margin-bottom: 24px; letter-spacing: -0.2px;
+    white-space: nowrap;
+}
+.badge svg { width:16px; height:16px; margin-right:7px; flex-shrink:0; }
+
+/* 진행중 — 심플한 fluid gradient, 카드에 밀착 */
+.badge--pending {
+    padding: 5px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 12px;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg,
+        #003fad 0%, #0071e3 20%, #34aadc 45%,
+        #00d4ff 60%, #0071e3 80%, #003fad 100%
+    );
+    background-size: 300% 100%;
+    color: #ffffff;
+    animation: fluid-badge 3.5s ease-in-out infinite;
+}
+@keyframes fluid-badge {
+    0%   { background-position:   0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position:   0% 50%; }
+}
+
+/* 성공 — 초록 */
+.badge--success {
+    background: rgba(52,199,89,0.13);
+    color: #28a745;
+}
+
+/* 실패 — 빨간 */
+.badge--fail {
+    background: rgba(255,59,48,0.10);
+    color: #d93025;
+}
+
+/* ── 조회 기간 바 ── */
+.period-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.period-bar .pb-range {
+    font-size: 14px;
+    font-weight: 500;
+    color: #48484a;
+    letter-spacing: 0.1px;
+}
+
+
+/* ── 누적 절약 강조 카드 ── */
+.savings-highlight {
+    background: linear-gradient(135deg, #0055b3 0%, #0071e3 50%, #34aadc 100%);
+    border-radius: var(--r-lg);
+    padding: 28px 28px 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 24px rgba(0,113,227,0.28);
+    color: #fff;
+}
+.savings-highlight .sh-label {
+    font-size: 13px; font-weight: 600;
+    opacity: 0.78; letter-spacing: 0.4px;
+    text-transform: uppercase; margin-bottom: 10px;
+}
+.savings-highlight .sh-amount {
+    font-size: 36px; font-weight: 800;
+    letter-spacing: -1.5px; line-height: 1;
+    margin-bottom: 6px;
+}
+.savings-highlight .sh-sub {
+    font-size: 14px; opacity: 0.72; font-weight: 500;
+}
+
+/* ── 섹션 제목 ── */
+.section-title {
+    font-size: 20px; font-weight: 700;
+    margin: 0 0 16px; letter-spacing: -0.4px;
+}
+
+/* ── 클릭 가능한 goal card 래퍼 ── */
+.goal-card-wrapper {
+    cursor: pointer;
+    border-radius: var(--r-lg);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    margin-bottom: 32px;
+}
+.goal-card-wrapper:hover  { transform: scale(1.02); }
+.goal-card-wrapper:active { transform: scale(0.98); }
+
+/* ── 목록 카드 (공통) ── */
+.list-card {
+    background: var(--card-bg);
+    border-radius: var(--r-lg);
+    padding: 8px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+}
+
+.list-item {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 16px; border-radius: var(--r-md);
+    transition: background 0.18s;
+}
+.list-item:hover { background: #f5f5f7; }
+.list-item:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.item-left { display: flex; align-items: center; }
+
+.item-icon {
+    width: 44px; height: 44px;
+    background: #f0f4f8; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 14px; color: var(--accent); flex-shrink: 0;
+}
+.item-icon svg { width:22px; height:22px; }
+
+.item-title {
+    font-size: 17px; font-weight: 600;
+    margin: 0 0 2px; letter-spacing: -0.2px;
+}
+.item-subtitle {
+    font-size: 13px; color: var(--text-secondary); margin: 0;
+}
+.item-amount {
+    font-size: 17px; font-weight: 600; letter-spacing: -0.3px;
+}
+
+/* ── 아이템 우측 영역 (금액 + 버튼) ── */
+.item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* ── 💸 절약완료 버튼 ── */
+.btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(0,113,227,0.10);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.18s, transform 0.12s;
+    letter-spacing: -0.1px;
+}
+.btn-save:hover  { background: rgba(0,113,227,0.18); }
+.btn-save:active { transform: scale(0.95); }
+
+/* ── 예상 소비 목록 비어있을 때 ── */
+.spending-empty {
+    padding: 20px 16px;
+    text-align: center;
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* ── 절약 횟수 뱃지 (상세 화면 전용) ── */
+.count-badge {
+    display: inline-block;
+    background: rgba(0,113,227,0.10);
+    color: var(--accent);
+    font-size: 11px; font-weight: 700;
+    padding: 2px 7px; border-radius: 20px;
+    margin-left: 6px; vertical-align: middle;
+    letter-spacing: 0.1px;
+}
