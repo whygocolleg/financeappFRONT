@@ -278,3 +278,13 @@ function init(data) {
 }
 
 init(appData);
+
+/* 테스트용: 초기화 버튼 */
+const resetBtn = document.createElement('button');
+resetBtn.innerText = "♻️ 데이터 초기화";
+resetBtn.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; padding:8px 12px; border-radius:8px; border:none; background:#ff4757; color:white; font-weight:bold; cursor:pointer;";
+resetBtn.onclick = () => {
+    localStorage.removeItem('financeData');
+    location.reload();
+};
+document.body.appendChild(resetBtn);
