@@ -188,15 +188,69 @@ body {
     margin: 0 0 16px; letter-spacing: -0.4px;
 }
 
+/* ── 다중 목표 목록 영역 ── */
+.goals-section { margin-bottom: 32px; }
+
+.goals-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
+
+/* 카드 + 삭제 버튼을 감싸는 외부 컨테이너 */
+.goal-card-outer {
+    position: relative;
+}
+
 /* ── 클릭 가능한 goal card 래퍼 ── */
 .goal-card-wrapper {
     cursor: pointer;
     border-radius: var(--r-lg);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
-    margin-bottom: 32px;
 }
 .goal-card-wrapper:hover  { transform: scale(1.02); }
 .goal-card-wrapper:active { transform: scale(0.98); }
+
+/* ── 🗑️ 목표 삭제 버튼 ── */
+.btn-delete-goal {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 59, 48, 0.10);
+    color: #d93025;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.12s;
+    z-index: 1;
+}
+.btn-delete-goal:hover  { background: rgba(255, 59, 48, 0.20); }
+.btn-delete-goal:active { transform: scale(0.92); }
+
+/* ── ➕ 새로운 목표 추가 버튼 ── */
+.btn-add-goal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--r-lg);
+    border: 2px dashed rgba(0, 113, 227, 0.35);
+    background: rgba(0, 113, 227, 0.04);
+    color: var(--accent);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.12s;
+}
+.btn-add-goal:hover  {
+    background: rgba(0, 113, 227, 0.09);
+    border-color: rgba(0, 113, 227, 0.60);
+}
+.btn-add-goal:active { transform: scale(0.98); }
 
 /* ── 목록 카드 (공통) ── */
 .list-card {

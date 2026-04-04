@@ -35,11 +35,6 @@ const mockData = {
     today_spending: 19500,       // 오늘 실제 소비액 (원) — DB에서 채워줄 값
     today_budget:   30000,       // 오늘 예산 (원)       — DB에서 채워줄 값
 
-    /** 금융 목표 카드 */
-    user_goal: "새로운 노트북 구매",
-    goal_amount: 3000000,       // 목표 금액 (원)
-    current_saving: 1950000,    // 현재 저축액 (원)
-
     /** 예상 소비 목록 섹션 */
     spending_section_title: "예상 소비 목록",
     expected_spending: [
@@ -69,68 +64,73 @@ const mockData = {
         }
     ],
 
-    /* ── 목표 상세 화면 (Goal Detail Screen) ── */
-
-    goal_detail: {
-        /** 화면 상단 제목 */
-        screen_title: "노트북 구매 목표 상세",
-
-        /** 누적 절약 총액 (원) */
-        total_saved: 1950000,
-
-        /** 카테고리별 절약 내역 섹션 제목 */
-        history_section_title: "카테고리별 절약 내역",
-
-        /**
-         * 카테고리별 절약 내역 목록
-         *  - save_count  : 해당 카테고리에서 절약한 총 횟수
-         *  - total_saved : 해당 카테고리 누적 절약 금액 (원)
-         */
-        /**
-         * 조회 기간 (Billing Cycle)
-         *  - start / end       : 카드 결제일 기준 주기 시작·종료일 (표시용 문자열)
-         *  - total_save_count  : 이번 주기 내 전체 절약 횟수
-         *
-         * ── DB 연동 포인트 ──────────────────────────────────────────
-         * 사용자의 카드 결제일에 따라 start/end 를 계산한 뒤
-         * 이 세 필드만 API 응답으로 교체하면 화면이 자동 반영됩니다.
-         * ────────────────────────────────────────────────────────────
-         */
-        billing_period: {
-            start:            "2026.02.23",   // 주기 시작일
-            end:              "2026.03.22",   // 주기 종료일
-            total_save_count: 45              // 이번 주기 총 절약 횟수
-        },
-
-        saving_history: [
-            {
-                id: 1,
-                category: "커피",
-                icon: "coffee",
-                save_count: 45,
-                total_saved: 20250
-            },
-            {
-                id: 2,
-                category: "점심 식사",
-                icon: "food",
-                save_count: 12,
-                total_saved: 156000
-            },
-            {
-                id: 3,
-                category: "교통비",
-                icon: "transport",
-                save_count: 30,
-                total_saved: 90000
-            },
-            {
-                id: 4,
-                category: "쇼핑",
-                icon: "shopping",
-                save_count: 8,
-                total_saved: 124000
+    /**
+     * 다중 금융 목표 배열
+     *  각 항목: { id, name, target_amount, current_saving, detail }
+     *
+     * ── DB 연동 포인트 ──────────────────────────────────────────
+     * API에서 goals 배열을 받아오면 이 배열을 교체하면 됩니다.
+     * ────────────────────────────────────────────────────────────
+     */
+    goals: [
+        {
+            id: 1,
+            name: "새로운 노트북 구매",
+            target_amount: 3000000,
+            current_saving: 1950000,
+            detail: {
+                screen_title: "노트북 구매 목표 상세",
+                history_section_title: "카테고리별 절약 내역",
+                billing_period: {
+                    start:            "2026.02.23",
+                    end:              "2026.03.22",
+                    total_save_count: 45
+                },
+                saving_history: [
+                    { id: 1, category: "커피",     icon: "coffee",    save_count: 45, total_saved: 20250  },
+                    { id: 2, category: "점심 식사", icon: "food",      save_count: 12, total_saved: 156000 },
+                    { id: 3, category: "교통비",   icon: "transport", save_count: 30, total_saved: 90000  },
+                    { id: 4, category: "쇼핑",     icon: "shopping",  save_count:  8, total_saved: 124000 }
+                ]
             }
-        ]
-    }
+        },
+        {
+            id: 2,
+            name: "유럽 여행 자금",
+            target_amount: 5000000,
+            current_saving: 1200000,
+            detail: {
+                screen_title: "유럽 여행 목표 상세",
+                history_section_title: "카테고리별 절약 내역",
+                billing_period: {
+                    start:            "2026.02.23",
+                    end:              "2026.03.22",
+                    total_save_count: 20
+                },
+                saving_history: [
+                    { id: 1, category: "커피",     icon: "coffee", save_count: 20, total_saved: 9000   },
+                    { id: 2, category: "점심 식사", icon: "food",   save_count:  8, total_saved: 104000 }
+                ]
+            }
+        },
+        {
+            id: 3,
+            name: "비상금 마련",
+            target_amount: 2000000,
+            current_saving: 500000,
+            detail: {
+                screen_title: "비상금 목표 상세",
+                history_section_title: "카테고리별 절약 내역",
+                billing_period: {
+                    start:            "2026.02.23",
+                    end:              "2026.03.22",
+                    total_save_count: 10
+                },
+                saving_history: [
+                    { id: 1, category: "쇼핑",   icon: "shopping",  save_count: 5, total_saved: 300000 },
+                    { id: 2, category: "교통비", icon: "transport", save_count: 5, total_saved: 200000 }
+                ]
+            }
+        }
+    ]
 };
