@@ -156,6 +156,19 @@ function renderHome(data) {
 
     const emptyHTML = `<p class="spending-empty">오늘 예상 소비를 모두 절약했어요! 🎉</p>`;
 
+    /* 새로운 목표 추가 인라인 폼 */
+    const addGoalFormHTML = `
+        <div class="add-goal-form" id="add-goal-form" style="display: none;">
+            <p class="form-title">새로운 목표 시작하기 🚀</p>
+            <input type="text" id="new-goal-name" class="form-input" placeholder="목표 이름 (예: 유럽 여행)" autocomplete="off">
+            <input type="text" id="new-goal-amount" class="form-input" placeholder="목표 금액 (숫자만)" autocomplete="off">
+            <div class="form-actions">
+                <button class="btn-cancel" id="btn-cancel-goal">취소</button>
+                <button class="btn-confirm" id="btn-confirm-goal">추가하기</button>
+            </div>
+        </div>
+    `;
+
     document.getElementById('home-content').innerHTML = `
         <header class="home-header">
             <h1>${data.page_title}</h1>
@@ -175,6 +188,7 @@ function renderHome(data) {
                 </svg>
                 새로운 목표 추가하기
             </button>
+            ${addGoalFormHTML}
         </div>
 
         <h3 class="section-title">${data.spending_section_title}</h3>
@@ -201,10 +215,69 @@ function renderHome(data) {
         });
     });
 
-    /* ➕ 목표 추가 버튼 이벤트 */
-    document.getElementById('btn-add-goal').addEventListener('click', onAddGoal);
+    /* ➕ 목표 추가 버튼 이벤트: 폼 열기 */
+    const addBtn = document.getElementById('btn-add-goal');
+    const formDiv = document.getElementById('add-goal-form');
+    
+    addBtn.addEventListener('click', () => {
+        addBtn.style.display = 'none';
+        formDiv.style.display = 'block';
+        document.getElementById('new-goal-name').focus();
+    });
 
-    /* 💸 절약완료 버튼 이벤트 */
+    /* 폼 취소 버튼 */
+    document.getElementById('btn-cancel-goal').addEventListener('click', () => {
+        addBtn.style.display = 'flex';
+        formDiv.style.display = 'none';
+        document.getElementById('new-goal-name').value = '';
+        document.getElementById('new-goal-amount').value = '';
+    });
+
+    /* 폼 추가하기 완료 버튼 */
+    document.getElementById('btn-confirm-goal').addEventListener('click', () => {
+        const nameInput = document.getElementById('new-goal-name').value;
+        const amountStr = document.getElementById('new-goal-amount').value;
+        const amount = Number(amountStr.replace(/[^0-9]/g, ''));
+
+        if (!nameInput.trim()) {
+            alert('목표 이름을 입력해주세요.');
+            return;
+        }
+        if (!amount || amount <= 0) {
+            alert('올바른 목표 금액을 지칭할 숫자를 입력해주세요.');
+            return;
+        }
+
+        const newGoal = {
+            id: nextGoalId(),
+            name: nameInput.trim(),
+            target_amount: amount,
+            current_saving: 0,
+            detail: {
+                screen_title: `${nameInput.trim()} 상세`,
+                history_section_title: "카테고리별 절약 내역",
+                billing_period: {
+                    start: new Date().toLocaleDateString('ko-KR').replace(/\./g, '.').replace(/ /g, ''),
+                    end: '',
+                    total_save_count: 0
+                },
+                saving_history: []
+            }
+        };
+
+        appData.goals.push(newGoal);
+        saveData(appData);
+        renderHome(appData);
+    });
+
+    // 금액 입력란 자동 콤마 포맷팅 편의 기능
+    document.getElementById('new-goal-amount').addEventListener('input', e => {
+        let val = e.target.value.replace(/[^0-9]/g, '');
+        if(val) val = Number(val).toLocaleString('ko-KR');
+        e.target.value = val;
+    });
+
+    /* 💸 절약완료 버튼 이벤트 (기존 유지) */
     document.querySelectorAll('.btn-save').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
@@ -212,43 +285,6 @@ function renderHome(data) {
             onSave(id);
         });
     });
-}
-
-/* ════════════════════════════════════════════════════════════════
-   목표 추가
-════════════════════════════════════════════════════════════════ */
-function onAddGoal() {
-    const name = prompt('새 목표 이름을 입력해 주세요 (예: 새 스마트폰 구매)');
-    if (!name || !name.trim()) return;
-
-    const amountStr = prompt('목표 금액을 숫자로 입력해 주세요 (원, 예: 1500000)');
-    if (!amountStr) return;
-    const amount = Number(amountStr.replace(/,/g, ''));
-    if (isNaN(amount) || amount <= 0) {
-        alert('올바른 금액을 입력해 주세요.');
-        return;
-    }
-
-    const newGoal = {
-        id: nextGoalId(),
-        name: name.trim(),
-        target_amount: amount,
-        current_saving: 0,
-        detail: {
-            screen_title: `${name.trim()} 상세`,
-            history_section_title: "카테고리별 절약 내역",
-            billing_period: {
-                start: new Date().toLocaleDateString('ko-KR').replace(/\./g, '.').replace(/ /g, ''),
-                end: '',
-                total_save_count: 0
-            },
-            saving_history: []
-        }
-    };
-
-    appData.goals.push(newGoal);
-    saveData(appData);
-    renderHome(appData);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -345,6 +381,7 @@ function navigateTo(screenName, goalId) {
         const goal = appData.goals.find(g => g.id === goalId);
         if (!goal) return;
         renderDetail(goal);
+        history.pushState({ screen: 'detail', goalId }, '', '');
 
         shell.classList.add('transitioning');
         shell.classList.add('show-detail');
@@ -357,10 +394,29 @@ function navigateTo(screenName, goalId) {
 }
 
 function navigateBack() {
-    shell.classList.add('transitioning');
-    shell.classList.remove('show-detail');
-    setTimeout(() => shell.classList.remove('transitioning'), SLIDE_MS);
+    history.back();
 }
+
+window.addEventListener('popstate', (e) => {
+    const state = e.state;
+    if (!state || state.screen === 'home') {
+        shell.classList.add('transitioning');
+        shell.classList.remove('show-detail');
+        setTimeout(() => shell.classList.remove('transitioning'), SLIDE_MS);
+    } else if (state.screen === 'detail') {
+        const goal = appData.goals.find(g => g.id === state.goalId);
+        if (!goal) return;
+        selectedGoalId = state.goalId;
+        renderDetail(goal);
+        shell.classList.add('transitioning');
+        shell.classList.add('show-detail');
+        document.getElementById('screen-detail').scrollTop = 0;
+        setTimeout(() => {
+            shell.classList.remove('transitioning');
+            animateAmount('sh-amount-anim', goal.current_saving, 900);
+        }, SLIDE_MS);
+    }
+});
 
 /* ════════════════════════════════════════════════════════════════
    4. 유틸 — 숫자 카운트업 애니메이션
@@ -383,6 +439,7 @@ function animateAmount(elId, target, duration) {
    DB 연동 시: fetch('/api/dashboard').then(r=>r.json()).then(init);
 ════════════════════════════════════════════════════════════════ */
 function init(data) {
+    history.replaceState({ screen: 'home' }, '', '');
     renderHome(data);
 }
 
