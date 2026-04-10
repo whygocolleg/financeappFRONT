@@ -216,25 +216,25 @@ body {
 
 /* ── 예상소비 요약 카드 ── */
 .spending-summary-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: linear-gradient(135deg, #0055b3 0%, #0071e3 50%, #34aadc 100%);
     border-radius: var(--r-lg);
-    padding: 24px 28px 20px;
-    margin-bottom: 28px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    padding: 28px 28px 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 24px rgba(0,113,227,0.28);
     color: #fff;
 }
 .spending-summary-card .ss-label {
-    font-size: 12px; font-weight: 600;
-    opacity: 0.65; letter-spacing: 0.6px;
-    text-transform: uppercase; margin: 0 0 8px;
+    font-size: 13px; font-weight: 600;
+    opacity: 0.78; letter-spacing: 0.4px;
+    text-transform: uppercase; margin: 0 0 10px;
 }
 .spending-summary-card .ss-amount {
-    font-size: 34px; font-weight: 800;
-    letter-spacing: -1.2px; line-height: 1;
+    font-size: 36px; font-weight: 800;
+    letter-spacing: -1.5px; line-height: 1;
     margin: 0 0 6px;
 }
 .spending-summary-card .ss-sub {
-    font-size: 13px; opacity: 0.6; font-weight: 500; margin: 0;
+    font-size: 14px; opacity: 0.72; font-weight: 500; margin: 0;
 }
 
 /* ── 조회 기간 바 ── */
