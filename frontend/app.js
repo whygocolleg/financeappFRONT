@@ -8,14 +8,13 @@ function loadData() {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             const parsed = JSON.parse(saved);
-            /* 구버전 데이터(goals 배열 없음) 마이그레이션 */
             if (!parsed.goals) {
                 parsed.goals = mockData.goals;
                 saveData(parsed);
             }
             return parsed;
         }
-    } catch (e) { /* 파싱 실패 시 mockData 로 폴백 */ }
+    } catch (e) {}
     saveData(mockData);
     return mockData;
 }
@@ -24,13 +23,12 @@ function saveData(data) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-/* 앱 전체에서 공유하는 단일 상태 객체 */
 let appData = loadData();
-
-/* 현재 상세 화면에서 보고 있는 목표 id */
 let selectedGoalId = null;
 
-/* 다음 목표 id 생성용 (최대 id + 1) */
+/* 현재 탭: 'home' | 'transactions' */
+let currentTab = 'home';
+
 function nextGoalId() {
     return appData.goals.reduce((max, g) => Math.max(max, g.id), 0) + 1;
 }
@@ -83,10 +81,9 @@ const TRASH_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 </svg>`;
 
 /* ════════════════════════════════════════════════════════════════
-   1. renderHome(data)   — 홈 대시보드 렌더링
+   1. renderHome — 홈: 목표 진행도
 ════════════════════════════════════════════════════════════════ */
 function renderHome(data) {
-
     function computeStatus(data) {
         if (data.today_spending > data.today_budget) return 'fail';
         return data.today_status || 'pending';
@@ -96,14 +93,12 @@ function renderHome(data) {
         const CHECK_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/></svg>`;
-
         const WARN_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0
                 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
             <line x1="12" y1="9" x2="12" y2="13"/>
             <line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
-
         const configs = {
             success: { cls: 'badge--success', icon: CHECK_ICON, text: '오늘의 절약 성공!' },
             fail:    { cls: 'badge--fail',    icon: WARN_ICON,  text: '예산 초과! 주의하세요' },
@@ -116,7 +111,6 @@ function renderHome(data) {
     const status    = computeStatus(data);
     const badgeHTML = renderBadge(status);
 
-    /* 목표 카드 목록 */
     const goalsHTML = data.goals.map(goal => {
         const progress = Math.round((goal.current_saving / goal.target_amount) * 100);
         return `
@@ -135,6 +129,117 @@ function renderHome(data) {
         </div>
         `;
     }).join('');
+
+    const addGoalFormHTML = `
+        <div class="add-goal-form" id="add-goal-form" style="display: none;">
+            <p class="form-title">새로운 목표 시작하기 🚀</p>
+            <input type="text" id="new-goal-name" class="form-input" placeholder="목표 이름 (예: 유럽 여행)" autocomplete="off">
+            <input type="text" id="new-goal-amount" class="form-input" placeholder="목표 금액 (숫자만)" autocomplete="off">
+            <div class="form-actions">
+                <button class="btn-cancel" id="btn-cancel-goal">취소</button>
+                <button class="btn-confirm" id="btn-confirm-goal">추가하기</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('home-content').innerHTML = `
+        <header class="home-header">
+            <h1>${data.page_title}</h1>
+        </header>
+
+        ${badgeHTML}
+
+        <div class="goals-section">
+            <h3 class="section-title">나의 목표 진행도</h3>
+            <div class="goals-list" id="goals-list">
+                ${goalsHTML || '<p class="spending-empty">아직 목표가 없어요. 새 목표를 추가해 보세요! 🎯</p>'}
+            </div>
+            <button class="btn-add-goal" id="btn-add-goal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                     stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                새로운 목표 추가하기
+            </button>
+            ${addGoalFormHTML}
+        </div>
+    `;
+
+    /* 카드 클릭 → 상세 */
+    document.querySelectorAll('.goal-card-wrapper').forEach(wrapper => {
+        const goalId = Number(wrapper.dataset.goalId);
+        wrapper.addEventListener('click', () => navigateTo('detail', goalId));
+        wrapper.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') navigateTo('detail', goalId);
+        });
+    });
+
+    /* 삭제 버튼 */
+    document.querySelectorAll('.btn-delete-goal').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            onDeleteGoal(Number(btn.dataset.goalId));
+        });
+    });
+
+    /* 목표 추가 폼 */
+    const addBtn = document.getElementById('btn-add-goal');
+    const formDiv = document.getElementById('add-goal-form');
+
+    addBtn.addEventListener('click', () => {
+        addBtn.style.display = 'none';
+        formDiv.style.display = 'block';
+        document.getElementById('new-goal-name').focus();
+    });
+
+    document.getElementById('btn-cancel-goal').addEventListener('click', () => {
+        addBtn.style.display = 'flex';
+        formDiv.style.display = 'none';
+        document.getElementById('new-goal-name').value = '';
+        document.getElementById('new-goal-amount').value = '';
+    });
+
+    document.getElementById('btn-confirm-goal').addEventListener('click', () => {
+        const nameInput = document.getElementById('new-goal-name').value;
+        const amountStr = document.getElementById('new-goal-amount').value;
+        const amount = Number(amountStr.replace(/[^0-9]/g, ''));
+
+        if (!nameInput.trim()) { alert('목표 이름을 입력해주세요.'); return; }
+        if (!amount || amount <= 0) { alert('올바른 목표 금액을 입력해주세요.'); return; }
+
+        appData.goals.push({
+            id: nextGoalId(),
+            name: nameInput.trim(),
+            target_amount: amount,
+            current_saving: 0,
+            detail: {
+                screen_title: `${nameInput.trim()} 상세`,
+                history_section_title: "카테고리별 절약 내역",
+                billing_period: {
+                    start: new Date().toLocaleDateString('ko-KR').replace(/ /g, ''),
+                    end: '',
+                    total_save_count: 0
+                },
+                saving_history: []
+            }
+        });
+        saveData(appData);
+        renderHome(appData);
+    });
+
+    document.getElementById('new-goal-amount').addEventListener('input', e => {
+        let val = e.target.value.replace(/[^0-9]/g, '');
+        if (val) val = Number(val).toLocaleString('ko-KR');
+        e.target.value = val;
+    });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   2. renderTransactions — 예상소비 탭
+════════════════════════════════════════════════════════════════ */
+function renderTransactions(data) {
+    const total = data.expected_spending.reduce((sum, item) => sum + item.amount, 0);
 
     const spendingHTML = data.expected_spending.map(item => `
         <div class="list-item" data-id="${item.id}">
@@ -156,161 +261,53 @@ function renderHome(data) {
 
     const emptyHTML = `<p class="spending-empty">오늘 예상 소비를 모두 절약했어요! 🎉</p>`;
 
-    /* 새로운 목표 추가 인라인 폼 */
-    const addGoalFormHTML = `
-        <div class="add-goal-form" id="add-goal-form" style="display: none;">
-            <p class="form-title">새로운 목표 시작하기 🚀</p>
-            <input type="text" id="new-goal-name" class="form-input" placeholder="목표 이름 (예: 유럽 여행)" autocomplete="off">
-            <input type="text" id="new-goal-amount" class="form-input" placeholder="목표 금액 (숫자만)" autocomplete="off">
-            <div class="form-actions">
-                <button class="btn-cancel" id="btn-cancel-goal">취소</button>
-                <button class="btn-confirm" id="btn-confirm-goal">추가하기</button>
-            </div>
-        </div>
-    `;
-
-    document.getElementById('home-content').innerHTML = `
+    document.getElementById('transactions-content').innerHTML = `
         <header class="home-header">
-            <h1>${data.page_title}</h1>
+            <h1>예상 소비 목록</h1>
         </header>
 
-        ${badgeHTML}
-
-        <div class="goals-section">
-            <div class="goals-list" id="goals-list">
-                ${goalsHTML}
-            </div>
-            <button class="btn-add-goal" id="btn-add-goal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                     stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-                    <line x1="12" y1="5" x2="12" y2="19"/>
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                새로운 목표 추가하기
-            </button>
-            ${addGoalFormHTML}
+        ${data.expected_spending.length > 0 ? `
+        <div class="spending-summary-card">
+            <p class="ss-label">오늘 예상 총 지출</p>
+            <p class="ss-amount">${fmt(total)}</p>
+            <p class="ss-sub">총 ${data.expected_spending.length}건의 예상 소비</p>
         </div>
+        ` : ''}
 
-        <h3 class="section-title">${data.spending_section_title}</h3>
+        <h3 class="section-title">소비 내역</h3>
         <div class="list-card">
             ${spendingHTML || emptyHTML}
         </div>
     `;
 
-    /* 카드 클릭 → 상세 화면 이동 */
-    document.querySelectorAll('.goal-card-wrapper').forEach(wrapper => {
-        const goalId = Number(wrapper.dataset.goalId);
-        wrapper.addEventListener('click', () => navigateTo('detail', goalId));
-        wrapper.addEventListener('keydown', e => {
-            if (e.key === 'Enter' || e.key === ' ') navigateTo('detail', goalId);
-        });
-    });
-
-    /* 🗑️ 삭제 버튼 이벤트 */
-    document.querySelectorAll('.btn-delete-goal').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            const goalId = Number(btn.dataset.goalId);
-            onDeleteGoal(goalId);
-        });
-    });
-
-    /* ➕ 목표 추가 버튼 이벤트: 폼 열기 */
-    const addBtn = document.getElementById('btn-add-goal');
-    const formDiv = document.getElementById('add-goal-form');
-    
-    addBtn.addEventListener('click', () => {
-        addBtn.style.display = 'none';
-        formDiv.style.display = 'block';
-        document.getElementById('new-goal-name').focus();
-    });
-
-    /* 폼 취소 버튼 */
-    document.getElementById('btn-cancel-goal').addEventListener('click', () => {
-        addBtn.style.display = 'flex';
-        formDiv.style.display = 'none';
-        document.getElementById('new-goal-name').value = '';
-        document.getElementById('new-goal-amount').value = '';
-    });
-
-    /* 폼 추가하기 완료 버튼 */
-    document.getElementById('btn-confirm-goal').addEventListener('click', () => {
-        const nameInput = document.getElementById('new-goal-name').value;
-        const amountStr = document.getElementById('new-goal-amount').value;
-        const amount = Number(amountStr.replace(/[^0-9]/g, ''));
-
-        if (!nameInput.trim()) {
-            alert('목표 이름을 입력해주세요.');
-            return;
-        }
-        if (!amount || amount <= 0) {
-            alert('올바른 목표 금액을 지칭할 숫자를 입력해주세요.');
-            return;
-        }
-
-        const newGoal = {
-            id: nextGoalId(),
-            name: nameInput.trim(),
-            target_amount: amount,
-            current_saving: 0,
-            detail: {
-                screen_title: `${nameInput.trim()} 상세`,
-                history_section_title: "카테고리별 절약 내역",
-                billing_period: {
-                    start: new Date().toLocaleDateString('ko-KR').replace(/\./g, '.').replace(/ /g, ''),
-                    end: '',
-                    total_save_count: 0
-                },
-                saving_history: []
-            }
-        };
-
-        appData.goals.push(newGoal);
-        saveData(appData);
-        renderHome(appData);
-    });
-
-    // 금액 입력란 자동 콤마 포맷팅 편의 기능
-    document.getElementById('new-goal-amount').addEventListener('input', e => {
-        let val = e.target.value.replace(/[^0-9]/g, '');
-        if(val) val = Number(val).toLocaleString('ko-KR');
-        e.target.value = val;
-    });
-
-    /* 💸 절약완료 버튼 이벤트 (기존 유지) */
     document.querySelectorAll('.btn-save').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
-            const id = Number(btn.dataset.id);
-            onSave(id);
+            onSave(Number(btn.dataset.id));
         });
     });
 }
 
 /* ════════════════════════════════════════════════════════════════
-   목표 삭제
+   목표 삭제 / 절약완료
 ════════════════════════════════════════════════════════════════ */
 function onDeleteGoal(goalId) {
     const goal = appData.goals.find(g => g.id === goalId);
     if (!goal) return;
     if (!confirm(`"${goal.name}" 목표를 정말 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`)) return;
-
     appData.goals = appData.goals.filter(g => g.id !== goalId);
     saveData(appData);
     renderHome(appData);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   절약완료 처리
-════════════════════════════════════════════════════════════════ */
 function onSave(id) {
     appData.expected_spending = appData.expected_spending.filter(item => item.id !== id);
     saveData(appData);
-    renderHome(appData);
+    renderTransactions(appData);
 }
 
 /* ════════════════════════════════════════════════════════════════
-   2. renderDetail(goal)   — 목표 상세 화면 렌더링
+   3. renderDetail — 목표 상세 화면
 ════════════════════════════════════════════════════════════════ */
 function renderDetail(goal) {
     const d  = goal.detail;
@@ -358,19 +355,43 @@ function renderDetail(goal) {
             <p class="sh-amount" id="sh-amount-anim">0원</p>
             <p class="sh-sub">지금까지 총 절약한 금액이에요 🎯</p>
         </div>
-
         <h3 class="section-title">${d.history_section_title}</h3>
-
         <div class="period-bar">
             ${periodHTML}
         </div>
-
         <div class="list-card">${historyHTML}</div>
     `;
 }
 
 /* ════════════════════════════════════════════════════════════════
-   3. 라우터 — 슬라이드 전환
+   4. 탭 전환 — 하단 네비게이션
+════════════════════════════════════════════════════════════════ */
+function switchTab(tab) {
+    if (currentTab === tab) return;
+    currentTab = tab;
+
+    const shell = document.getElementById('app-shell');
+
+    /* 탭 화면 전환 */
+    if (tab === 'home') {
+        shell.classList.remove('show-transactions');
+        renderHome(appData);
+    } else if (tab === 'transactions') {
+        shell.classList.add('show-transactions');
+        renderTransactions(appData);
+    }
+
+    /* 네비 활성 상태 */
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.tab === tab);
+    });
+}
+
+document.getElementById('nav-home').addEventListener('click', () => switchTab('home'));
+document.getElementById('nav-transactions').addEventListener('click', () => switchTab('transactions'));
+
+/* ════════════════════════════════════════════════════════════════
+   5. 라우터 — 상세 슬라이드 전환
 ════════════════════════════════════════════════════════════════ */
 const shell = document.getElementById('app-shell');
 const SLIDE_MS = 380;
@@ -381,10 +402,9 @@ function navigateTo(screenName, goalId) {
         const goal = appData.goals.find(g => g.id === goalId);
         if (!goal) return;
         renderDetail(goal);
-        history.pushState({ screen: 'detail', goalId }, '', '');
+        history.pushState({ screen: 'detail', goalId, prevTab: currentTab }, '', '');
 
-        shell.classList.add('transitioning');
-        shell.classList.add('show-detail');
+        shell.classList.add('transitioning', 'show-detail');
         document.getElementById('screen-detail').scrollTop = 0;
         setTimeout(() => {
             shell.classList.remove('transitioning');
@@ -408,8 +428,7 @@ window.addEventListener('popstate', (e) => {
         if (!goal) return;
         selectedGoalId = state.goalId;
         renderDetail(goal);
-        shell.classList.add('transitioning');
-        shell.classList.add('show-detail');
+        shell.classList.add('transitioning', 'show-detail');
         document.getElementById('screen-detail').scrollTop = 0;
         setTimeout(() => {
             shell.classList.remove('transitioning');
@@ -419,7 +438,7 @@ window.addEventListener('popstate', (e) => {
 });
 
 /* ════════════════════════════════════════════════════════════════
-   4. 유틸 — 숫자 카운트업 애니메이션
+   6. 숫자 카운트업 애니메이션
 ════════════════════════════════════════════════════════════════ */
 function animateAmount(elId, target, duration) {
     const el = document.getElementById(elId);
@@ -435,12 +454,12 @@ function animateAmount(elId, target, duration) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   5. 초기 렌더링
-   DB 연동 시: fetch('/api/dashboard').then(r=>r.json()).then(init);
+   7. 초기 렌더링
 ════════════════════════════════════════════════════════════════ */
 function init(data) {
     history.replaceState({ screen: 'home' }, '', '');
     renderHome(data);
+    renderTransactions(data);
 }
 
 init(appData);
@@ -448,9 +467,6 @@ init(appData);
 /* 테스트용: 초기화 버튼 */
 const resetBtn = document.createElement('button');
 resetBtn.innerText = "♻️ 데이터 초기화";
-resetBtn.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:9999; padding:8px 12px; border-radius:8px; border:none; background:#ff4757; color:white; font-weight:bold; cursor:pointer;";
-resetBtn.onclick = () => {
-    localStorage.removeItem('financeData');
-    location.reload();
-};
+resetBtn.style.cssText = "position:fixed; bottom:76px; right:20px; z-index:9999; padding:8px 12px; border-radius:8px; border:none; background:#ff4757; color:white; font-weight:bold; cursor:pointer;";
+resetBtn.onclick = () => { localStorage.removeItem('financeData'); location.reload(); };
 document.body.appendChild(resetBtn);

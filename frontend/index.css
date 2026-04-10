@@ -13,6 +13,7 @@
     --r-lg: 24px;
     --slide-dur: 0.38s;
     --slide-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --nav-h: 72px;
 }
 
 * { box-sizing: border-box; }
@@ -39,6 +40,7 @@ body {
 .screen {
     position: fixed;
     inset: 0;
+    bottom: var(--nav-h);
     overflow-y: auto;
     will-change: transform;
     transition: transform var(--slide-dur) var(--slide-ease);
@@ -46,16 +48,92 @@ body {
 }
 
 /* 홈: 기본 보임 */
-#screen-home   { transform: translateX(0); }
+#screen-home        { transform: translateX(0); }
+/* 예상소비 탭: 오른쪽 대기 */
+#screen-transactions { transform: translateX(100%); }
 /* 상세: 오른쪽 대기 */
-#screen-detail { transform: translateX(100%); }
+#screen-detail      { transform: translateX(100%); bottom: 0; }
 
-/* 상세 화면 활성 시 */
-.app-shell.show-detail #screen-home   { transform: translateX(-30%); }
-.app-shell.show-detail #screen-detail { transform: translateX(0); }
+/* 예상소비 탭 활성 시 */
+.app-shell.show-transactions #screen-home         { transform: translateX(-30%); }
+.app-shell.show-transactions #screen-transactions { transform: translateX(0); }
 
-/* 화면 전환 중 포인터 이벤트 막기 */
+/* 상세 화면 활성 시 — 탭 위에 덮어씌움 */
+.app-shell.show-detail #screen-home         { transform: translateX(-30%); }
+.app-shell.show-detail #screen-transactions { transform: translateX(-30%); }
+.app-shell.show-detail #screen-detail       { transform: translateX(0); }
+
+/* 상세 화면 활성 시 네비바 숨김 */
+.app-shell.show-detail ~ .bottom-nav { transform: translateY(100%); }
+
+/* 전환 중 포인터 이벤트 막기 */
 .app-shell.transitioning * { pointer-events: none; }
+
+/* ════════════════════════════════════════════
+   하단 네비게이션 바
+════════════════════════════════════════════ */
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    background: #16161a;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    transition: transform var(--slide-dur) var(--slide-ease);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 28px;
+    border: none;
+    background: none;
+    color: #5a5a72;
+    cursor: pointer;
+    border-radius: 16px;
+    transition: color 0.2s, background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.nav-item.active {
+    color: #ffffff;
+}
+
+.nav-item.active .nav-icon {
+    filter: drop-shadow(0 0 6px rgba(0, 180, 255, 0.5));
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s;
+}
+
+.nav-item.active .nav-icon {
+    transform: translateY(-1px);
+}
+
+.nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+/* active 탭 레이블 강조 */
+.nav-item.active .nav-label {
+    color: #4db8ff;
+}
 
 /* ════════════════════════════════════════════
    공통 레이아웃
@@ -63,11 +141,11 @@ body {
 .container {
     max-width: 440px;
     margin: 0 auto;
-    padding: 48px 24px 64px;
+    padding: 48px 24px 32px;
 }
 
 /* ── 홈 헤더 ── */
-.home-header { margin-bottom: 32px; }
+.home-header { margin-bottom: 24px; }
 .home-header h1 {
     font-size: 32px; font-weight: 700;
     letter-spacing: -0.8px; margin: 0;
@@ -88,7 +166,6 @@ body {
     width: 40px; height: 40px; border-radius: 50%;
     border: none; background: none;
     color: var(--accent); cursor: pointer;
-    font-size: 22px; font-weight: 300;
     transition: background 0.18s;
     flex-shrink: 0;
 }
@@ -100,7 +177,7 @@ body {
     color: var(--text-primary);
 }
 
-/* ── 배지 (3가지 상태) ── */
+/* ── 배지 ── */
 .badge {
     display: inline-flex; align-items: center;
     padding: 9px 18px; border-radius: 20px;
@@ -110,13 +187,10 @@ body {
 }
 .badge svg { width:16px; height:16px; margin-right:7px; flex-shrink:0; }
 
-/* 진행중 — 심플한 fluid gradient, 카드에 밀착 */
 .badge--pending {
     padding: 5px 12px;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 12px;
-    margin-bottom: 6px;
+    font-size: 14px; font-weight: 600;
+    border-radius: 12px; margin-bottom: 6px;
     background: linear-gradient(90deg,
         #003fad 0%, #0071e3 20%, #34aadc 45%,
         #00d4ff 60%, #0071e3 80%, #003fad 100%
@@ -131,16 +205,36 @@ body {
     100% { background-position:   0% 50%; }
 }
 
-/* 성공 — 초록 */
 .badge--success {
     background: rgba(52,199,89,0.13);
     color: #28a745;
 }
-
-/* 실패 — 빨간 */
 .badge--fail {
     background: rgba(255,59,48,0.10);
     color: #d93025;
+}
+
+/* ── 예상소비 요약 카드 ── */
+.spending-summary-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-radius: var(--r-lg);
+    padding: 24px 28px 20px;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    color: #fff;
+}
+.spending-summary-card .ss-label {
+    font-size: 12px; font-weight: 600;
+    opacity: 0.65; letter-spacing: 0.6px;
+    text-transform: uppercase; margin: 0 0 8px;
+}
+.spending-summary-card .ss-amount {
+    font-size: 34px; font-weight: 800;
+    letter-spacing: -1.2px; line-height: 1;
+    margin: 0 0 6px;
+}
+.spending-summary-card .ss-sub {
+    font-size: 13px; opacity: 0.6; font-weight: 500; margin: 0;
 }
 
 /* ── 조회 기간 바 ── */
@@ -152,12 +246,9 @@ body {
     gap: 8px;
 }
 .period-bar .pb-range {
-    font-size: 14px;
-    font-weight: 500;
-    color: #48484a;
-    letter-spacing: 0.1px;
+    font-size: 14px; font-weight: 500;
+    color: #48484a; letter-spacing: 0.1px;
 }
-
 
 /* ── 누적 절약 강조 카드 ── */
 .savings-highlight {
@@ -175,8 +266,7 @@ body {
 }
 .savings-highlight .sh-amount {
     font-size: 36px; font-weight: 800;
-    letter-spacing: -1.5px; line-height: 1;
-    margin-bottom: 6px;
+    letter-spacing: -1.5px; line-height: 1; margin-bottom: 6px;
 }
 .savings-highlight .sh-sub {
     font-size: 14px; opacity: 0.72; font-weight: 500;
@@ -188,17 +278,12 @@ body {
     margin: 0 0 16px; letter-spacing: -0.4px;
 }
 
-/* ── 다중 목표 목록 영역 ── */
+/* ── 다중 목표 목록 ── */
 .goals-section { margin-bottom: 32px; }
-
 .goals-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
 
-/* 카드 + 삭제 버튼을 감싸는 외부 컨테이너 */
-.goal-card-outer {
-    position: relative;
-}
+.goal-card-outer { position: relative; }
 
-/* ── 클릭 가능한 goal card 래퍼 ── */
 .goal-card-wrapper {
     cursor: pointer;
     border-radius: var(--r-lg);
@@ -207,46 +292,31 @@ body {
 .goal-card-wrapper:hover  { transform: scale(1.02); }
 .goal-card-wrapper:active { transform: scale(0.98); }
 
-/* ── 🗑️ 목표 삭제 버튼 ── */
 .btn-delete-goal {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    position: absolute; top: 12px; right: 12px;
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
     border: none;
     background: rgba(255, 59, 48, 0.10);
-    color: #d93025;
-    cursor: pointer;
+    color: #d93025; cursor: pointer;
     transition: background 0.18s, transform 0.12s;
     z-index: 1;
 }
 .btn-delete-goal:hover  { background: rgba(255, 59, 48, 0.20); }
 .btn-delete-goal:active { transform: scale(0.92); }
 
-/* ── ➕ 새로운 목표 추가 버튼 ── */
 .btn-add-goal {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 16px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; width: 100%; padding: 16px;
     border-radius: var(--r-lg);
     border: 2px dashed rgba(0, 113, 227, 0.35);
     background: rgba(0, 113, 227, 0.04);
     color: var(--accent);
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.2px;
+    font-size: 15px; font-weight: 700; letter-spacing: -0.2px;
     cursor: pointer;
     transition: background 0.18s, border-color 0.18s, transform 0.12s;
 }
-.btn-add-goal:hover  {
+.btn-add-goal:hover {
     background: rgba(0, 113, 227, 0.09);
     border-color: rgba(0, 113, 227, 0.60);
 }
@@ -263,60 +333,36 @@ body {
 }
 @keyframes slide-down {
     from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 .add-goal-form .form-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin: 0 0 16px;
-    color: var(--text-primary);
+    font-size: 16px; font-weight: 700;
+    margin: 0 0 16px; color: var(--text-primary);
 }
 .add-goal-form .form-input {
-    width: 100%;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-    border: 1px solid #d1d1d6;
-    border-radius: 12px;
-    font-size: 15px;
-    color: var(--text-primary);
+    width: 100%; padding: 14px 16px; margin-bottom: 12px;
+    border: 1px solid #d1d1d6; border-radius: 12px;
+    font-size: 15px; color: var(--text-primary);
     background: #fafafc;
     transition: border-color 0.2s, background 0.2s;
     font-family: inherit;
 }
 .add-goal-form .form-input:focus {
-    outline: none;
-    border-color: var(--accent);
-    background: #ffffff;
+    outline: none; border-color: var(--accent); background: #ffffff;
     box-shadow: 0 0 0 3px rgba(0,113,227,0.15);
 }
-.add-goal-form .form-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 18px;
-}
+.add-goal-form .form-actions { display: flex; gap: 12px; margin-top: 18px; }
 .add-goal-form .btn-cancel {
-    flex: 1;
-    padding: 14px;
-    border-radius: 12px;
-    border: none;
-    background: #e5e5ea;
-    color: #48484a;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
+    flex: 1; padding: 14px; border-radius: 12px; border: none;
+    background: #e5e5ea; color: #48484a;
+    font-size: 15px; font-weight: 600; cursor: pointer;
     transition: background 0.2s;
 }
 .add-goal-form .btn-cancel:hover { background: #d1d1d6; }
 .add-goal-form .btn-confirm {
-    flex: 1;
-    padding: 14px;
-    border-radius: 12px;
-    border: none;
-    background: var(--accent);
-    color: #ffffff;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
+    flex: 1; padding: 14px; border-radius: 12px; border: none;
+    background: var(--accent); color: #ffffff;
+    font-size: 15px; font-weight: 600; cursor: pointer;
     transition: background 0.2s;
 }
 .add-goal-form .btn-confirm:hover { background: #005bb5; }
@@ -344,7 +390,6 @@ body {
 }
 
 .item-left { display: flex; align-items: center; }
-
 .item-icon {
     width: 44px; height: 44px;
     background: #f0f4f8; border-radius: 12px;
@@ -352,40 +397,20 @@ body {
     margin-right: 14px; color: var(--accent); flex-shrink: 0;
 }
 .item-icon svg { width:22px; height:22px; }
+.item-title { font-size: 17px; font-weight: 600; margin: 0 0 2px; letter-spacing: -0.2px; }
+.item-subtitle { font-size: 13px; color: var(--text-secondary); margin: 0; }
+.item-amount { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
 
-.item-title {
-    font-size: 17px; font-weight: 600;
-    margin: 0 0 2px; letter-spacing: -0.2px;
-}
-.item-subtitle {
-    font-size: 13px; color: var(--text-secondary); margin: 0;
-}
-.item-amount {
-    font-size: 17px; font-weight: 600; letter-spacing: -0.3px;
-}
-
-/* ── 아이템 우측 영역 (금액 + 버튼) ── */
 .item-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-    flex-shrink: 0;
+    display: flex; flex-direction: column;
+    align-items: flex-end; gap: 6px; flex-shrink: 0;
 }
 
-/* ── 💸 절약완료 버튼 ── */
 .btn-save {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    border: none;
-    background: rgba(0,113,227,0.10);
-    color: var(--accent);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 12px; border-radius: 20px; border: none;
+    background: rgba(0,113,227,0.10); color: var(--accent);
+    font-size: 12px; font-weight: 700; cursor: pointer;
     white-space: nowrap;
     transition: background 0.18s, transform 0.12s;
     letter-spacing: -0.1px;
@@ -393,20 +418,14 @@ body {
 .btn-save:hover  { background: rgba(0,113,227,0.18); }
 .btn-save:active { transform: scale(0.95); }
 
-/* ── 예상 소비 목록 비어있을 때 ── */
 .spending-empty {
-    padding: 20px 16px;
-    text-align: center;
-    font-size: 15px;
-    color: var(--text-secondary);
-    margin: 0;
+    padding: 20px 16px; text-align: center;
+    font-size: 15px; color: var(--text-secondary); margin: 0;
 }
 
-/* ── 절약 횟수 뱃지 (상세 화면 전용) ── */
 .count-badge {
     display: inline-block;
-    background: rgba(0,113,227,0.10);
-    color: var(--accent);
+    background: rgba(0,113,227,0.10); color: var(--accent);
     font-size: 11px; font-weight: 700;
     padding: 2px 7px; border-radius: 20px;
     margin-left: 6px; vertical-align: middle;
