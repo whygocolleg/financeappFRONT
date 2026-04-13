@@ -18,6 +18,13 @@ const mockData = {
     page_title: "나의 금융 현황",
 
     /**
+     * 전체 공통 누적 절약 금액
+     * 절약완료 버튼을 누를 때마다 이 값에 누적됩니다.
+     * 모든 목표 상세 화면에서 동일하게 표시됩니다.
+     */
+    total_saving: 450000,
+
+    /**
      * 오늘의 절약 상태 배지
      *
      * today_status : 'success' | 'fail' | 'pending'
@@ -77,7 +84,6 @@ const mockData = {
             id: 1,
             name: "새로운 노트북 구매",
             target_amount: 3000000,
-            current_saving: 1950000,
             detail: {
                 screen_title: "노트북 구매 목표 상세",
                 history_section_title: "카테고리별 절약 내역",
@@ -98,7 +104,6 @@ const mockData = {
             id: 2,
             name: "유럽 여행 자금",
             target_amount: 5000000,
-            current_saving: 1200000,
             detail: {
                 screen_title: "유럽 여행 목표 상세",
                 history_section_title: "카테고리별 절약 내역",
@@ -117,7 +122,6 @@ const mockData = {
             id: 3,
             name: "비상금 마련",
             target_amount: 2000000,
-            current_saving: 500000,
             detail: {
                 screen_title: "비상금 목표 상세",
                 history_section_title: "카테고리별 절약 내역",

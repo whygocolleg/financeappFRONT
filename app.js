@@ -112,7 +112,7 @@ function renderHome(data) {
     const badgeHTML = renderBadge(status);
 
     const goalsHTML = data.goals.map(goal => {
-        const progress = Math.round((goal.current_saving / goal.target_amount) * 100);
+        const progress = Math.min(100, Math.round((data.total_saving / goal.target_amount) * 100));
         return `
         <div class="goal-card-outer">
             <div class="goal-card-wrapper" data-goal-id="${goal.id}" role="button"
@@ -212,7 +212,6 @@ function renderHome(data) {
             id: nextGoalId(),
             name: nameInput.trim(),
             target_amount: amount,
-            current_saving: 0,
             detail: {
                 screen_title: `${nameInput.trim()} 상세`,
                 history_section_title: "카테고리별 절약 내역",
@@ -301,9 +300,13 @@ function onDeleteGoal(goalId) {
 }
 
 function onSave(id) {
-    appData.expected_spending = appData.expected_spending.filter(item => item.id !== id);
+    const item = appData.expected_spending.find(i => i.id === id);
+    if (!item) return;
+    appData.total_saving = (appData.total_saving || 0) + item.amount;
+    appData.expected_spending = appData.expected_spending.filter(i => i.id !== id);
     saveData(appData);
     renderTransactions(appData);
+    renderHome(appData);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -408,7 +411,7 @@ function navigateTo(screenName, goalId) {
         document.getElementById('screen-detail').scrollTop = 0;
         setTimeout(() => {
             shell.classList.remove('transitioning');
-            animateAmount('sh-amount-anim', goal.current_saving, 900);
+            animateAmount('sh-amount-anim', appData.total_saving, 900);
         }, SLIDE_MS);
     }
 }
@@ -432,7 +435,7 @@ window.addEventListener('popstate', (e) => {
         document.getElementById('screen-detail').scrollTop = 0;
         setTimeout(() => {
             shell.classList.remove('transitioning');
-            animateAmount('sh-amount-anim', goal.current_saving, 900);
+            animateAmount('sh-amount-anim', appData.total_saving, 900);
         }, SLIDE_MS);
     }
 });
