@@ -304,9 +304,34 @@ function onSave(id) {
     if (!item) return;
     appData.total_saving = (appData.total_saving || 0) + item.amount;
     appData.expected_spending = appData.expected_spending.filter(i => i.id !== id);
+
+    // 모든 목표의 카테고리별 절약 내역에 반영
+    appData.goals.forEach(goal => {
+        const history = goal.detail.saving_history;
+        const existing = history.find(h => h.category === item.category);
+        if (existing) {
+            existing.save_count += 1;
+            existing.total_saved += item.amount;
+        } else {
+            history.push({
+                id: history.length + 1,
+                category: item.category,
+                icon: item.icon || 'etc',
+                save_count: 1,
+                total_saved: item.amount
+            });
+        }
+    });
+
     saveData(appData);
     renderTransactions(appData);
     renderHome(appData);
+
+    // 상세 화면이 열려 있으면 즉시 갱신
+    if (selectedGoalId != null) {
+        const goal = appData.goals.find(g => g.id === selectedGoalId);
+        if (goal) renderDetail(goal);
+    }
 }
 
 /* ════════════════════════════════════════════════════════════════
