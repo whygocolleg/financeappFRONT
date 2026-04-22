@@ -11,7 +11,30 @@
 <!-- ════════════════════════════════════════════
      앱 Shell
 ════════════════════════════════════════════ -->
-<div class="app-shell" id="app-shell">
+<!-- ════════════════════════════════════════════
+     로그인 / 회원가입 화면
+════════════════════════════════════════════ -->
+<div class="auth-screen" id="auth-screen">
+    <div class="auth-container">
+        <div class="auth-logo">💰</div>
+        <h1 class="auth-title">Finance App</h1>
+        <p class="auth-subtitle">절약 목표를 관리하세요</p>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login">로그인</button>
+            <button class="auth-tab" id="tab-signup">회원가입</button>
+        </div>
+
+        <div class="auth-form" id="auth-form">
+            <input class="auth-input" type="email" id="auth-email" placeholder="이메일" />
+            <input class="auth-input" type="password" id="auth-password" placeholder="비밀번호 (6자리 이상)" />
+            <p class="auth-error" id="auth-error"></p>
+            <button class="auth-btn" id="auth-submit">로그인</button>
+        </div>
+    </div>
+</div>
+
+<div class="app-shell" id="app-shell" style="display:none">
 
     <!-- ── Screen: 홈 (목표 진행도) ── -->
     <div class="screen" id="screen-home">
@@ -54,6 +77,7 @@
 
 <script src="FinancialGoalCard.js"></script>
 <script src="mockData.js"></script>
+<script type="module" src="auth.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
