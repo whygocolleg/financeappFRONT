@@ -145,6 +145,7 @@ function renderHome(data) {
     document.getElementById('home-content').innerHTML = `
         <header class="home-header">
             <h1>${data.page_title}</h1>
+            <button class="btn-logout" id="btn-logout">로그아웃</button>
         </header>
 
         ${badgeHTML}
@@ -181,6 +182,12 @@ function renderHome(data) {
             e.stopPropagation();
             onDeleteGoal(Number(btn.dataset.goalId));
         });
+    });
+
+    /* 로그아웃 */
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+        const { auth, signOut } = await import('./auth.js');
+        await signOut(auth);
     });
 
     /* 목표 추가 폼 */
