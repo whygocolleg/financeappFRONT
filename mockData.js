@@ -84,6 +84,7 @@ const mockData = {
             id: 1,
             name: "새로운 노트북 구매",
             target_amount: 3000000,
+            endDate: "2026-07-31",
             detail: {
                 screen_title: "노트북 구매 목표 상세",
                 history_section_title: "카테고리별 절약 내역",
@@ -104,6 +105,7 @@ const mockData = {
             id: 2,
             name: "유럽 여행 자금",
             target_amount: 5000000,
+            endDate: "2026-12-31",
             detail: {
                 screen_title: "유럽 여행 목표 상세",
                 history_section_title: "카테고리별 절약 내역",

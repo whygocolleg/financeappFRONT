@@ -51,6 +51,8 @@ body {
 #screen-home        { transform: translateX(0); }
 /* 예상소비 탭: 오른쪽 대기 */
 #screen-transactions { transform: translateX(100%); }
+/* 통계 탭: 오른쪽 대기 */
+#screen-stats        { transform: translateX(100%); }
 /* 상세: 오른쪽 대기 */
 #screen-detail      { transform: translateX(100%); bottom: 0; }
 
@@ -58,9 +60,15 @@ body {
 .app-shell.show-transactions #screen-home         { transform: translateX(-30%); }
 .app-shell.show-transactions #screen-transactions { transform: translateX(0); }
 
+/* 통계 탭 활성 시 */
+.app-shell.show-stats #screen-home         { transform: translateX(-30%); }
+.app-shell.show-stats #screen-transactions { transform: translateX(-30%); }
+.app-shell.show-stats #screen-stats        { transform: translateX(0); }
+
 /* 상세 화면 활성 시 — 탭 위에 덮어씌움 */
 .app-shell.show-detail #screen-home         { transform: translateX(-30%); }
 .app-shell.show-detail #screen-transactions { transform: translateX(-30%); }
+.app-shell.show-detail #screen-stats        { transform: translateX(-30%); }
 .app-shell.show-detail #screen-detail       { transform: translateX(0); }
 
 /* 상세 화면 활성 시 네비바 숨김 */
@@ -403,8 +411,9 @@ body {
 
 .item-right {
     display: flex; flex-direction: column;
-    align-items: flex-end; gap: 6px; flex-shrink: 0;
+    align-items: flex-end; gap: 4px; flex-shrink: 0;
 }
+.item-right-actions { display: flex; align-items: center; gap: 4px; }
 
 .btn-save {
     display: inline-flex; align-items: center; gap: 4px;
@@ -499,3 +508,87 @@ body {
     cursor: pointer; transition: background 0.2s;
 }
 .btn-logout:active { background: rgba(255,59,48,0.2); }
+
+/* ════════════════════════════════════════════
+   토스트 알림
+════════════════════════════════════════════ */
+.toast {
+    position: fixed;
+    bottom: calc(var(--nav-h) + 16px);
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    z-index: 9998;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    white-space: nowrap;
+    max-width: 88vw;
+    text-align: center;
+    pointer-events: none;
+    background: #1c1c1e;
+}
+.toast--show    { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast--success { background: #28a745; }
+.toast--info    { background: #0071e3; }
+.toast--warning { background: #ff9500; }
+
+/* ── D-day badge ── */
+.dday-row   { display: flex; align-items: center; margin-top: 8px; padding: 0 6px; }
+.dday-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; white-space: nowrap; }
+.dday--ok   { background: rgba(0,113,227,0.12); color: #0071e3; }
+.dday--soon { background: rgba(255,149,0,0.18); color: #c47800; }
+.dday--over { background: rgba(255,59,48,0.12); color: #d93025; }
+
+/* ── Budget bar card ── */
+.budget-bar-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+}
+.budget-bar-card--over { border: 1.5px solid rgba(255,59,48,0.35); }
+.budget-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.budget-bar-label  { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.budget-bar-pct    { font-size: 15px; font-weight: 700; color: var(--accent); }
+.budget-bar-pct.over { color: #ff3b30; }
+.budget-bar-track  { height: 8px; border-radius: 4px; background: var(--bg); overflow: hidden; margin-bottom: 8px; }
+.budget-bar-fill   { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.5s ease; }
+.budget-bar-fill.over { background: #ff3b30; }
+.budget-bar-amounts { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
+.budget-warning { margin-top: 10px; font-size: 13px; font-weight: 600; color: #ff3b30; background: rgba(255,59,48,0.08); border-radius: 8px; padding: 8px 12px; text-align: center; }
+
+/* ── inline delete button for spending items ── */
+.btn-del-spending { background: none; border: none; padding: 4px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; opacity: 0.55; }
+.btn-del-spending:hover { opacity: 1; color: #ff3b30; }
+
+/* ── add spending form select ── */
+.form-select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+/* ── Statistics screen ── */
+.stats-total-card {
+    background: linear-gradient(135deg, #0071e3 0%, #5ac8fa 100%);
+    border-radius: var(--radius-lg);
+    padding: 24px 20px;
+    margin-bottom: 20px;
+    color: #fff;
+    text-align: center;
+}
+.stats-total-label  { font-size: 13px; font-weight: 500; opacity: 0.85; margin-bottom: 8px; }
+.stats-total-amount { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+.stats-total-sub    { font-size: 12px; opacity: 0.75; margin-top: 6px; }
+.chart-wrapper { position: relative; max-width: 260px; margin: 0 auto 24px; }
+.chart-empty { text-align: center; color: var(--text-secondary); font-size: 14px; padding: 32px 0; }
+.stats-category-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.stats-category-row:last-child { border-bottom: none; }
+.stats-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.stats-cat-name  { flex: 1; font-size: 15px; font-weight: 500; }
+.stats-cat-count { font-size: 13px; color: var(--text-secondary); }
+.stats-cat-amount { font-size: 15px; font-weight: 700; }

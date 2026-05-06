@@ -46,6 +46,11 @@
         <div class="container" id="transactions-content"></div>
     </div>
 
+    <!-- ── Screen: 통계 ── -->
+    <div class="screen screen--tab" id="screen-stats">
+        <div class="container" id="stats-content"></div>
+    </div>
+
     <!-- ── Screen: 목표 상세 ── -->
     <div class="screen" id="screen-detail">
         <div id="detail-header-slot"></div>
@@ -73,8 +78,17 @@
         </svg>
         <span class="nav-label">예상소비</span>
     </button>
+    <button class="nav-item" id="nav-stats" data-tab="stats">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        <span class="nav-label">통계</span>
+    </button>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="FinancialGoalCard.js"></script>
 <script src="mockData.js"></script>
 <script type="module" src="auth.js"></script>
