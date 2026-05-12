@@ -2,15 +2,13 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finance Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#16161a">
+    <title>Finance App</title>
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════
-     앱 Shell
-════════════════════════════════════════════ -->
 <!-- ════════════════════════════════════════════
      로그인 / 회원가입 화면
 ════════════════════════════════════════════ -->
@@ -18,40 +16,58 @@
     <div class="auth-container">
         <div class="auth-logo">💰</div>
         <h1 class="auth-title">Finance App</h1>
-        <p class="auth-subtitle">절약 목표를 관리하세요</p>
+        <p class="auth-subtitle">절약 목표를 스마트하게 관리하세요</p>
 
         <div class="auth-tabs">
             <button class="auth-tab active" id="tab-login">로그인</button>
-            <button class="auth-tab" id="tab-signup">회원가입</button>
+            <button class="auth-tab"        id="tab-signup">회원가입</button>
         </div>
 
         <div class="auth-form" id="auth-form">
-            <input class="auth-input" type="email" id="auth-email" placeholder="이메일" />
-            <input class="auth-input" type="password" id="auth-password" placeholder="비밀번호 (6자리 이상)" />
+            <div class="auth-input-group" id="auth-name-group" style="display:none">
+                <input class="auth-input" type="text"     id="auth-name"     placeholder="이름" autocomplete="name">
+            </div>
+            <div class="auth-input-group">
+                <input class="auth-input" type="email"    id="auth-email"    placeholder="이메일" autocomplete="email">
+            </div>
+            <div class="auth-input-group">
+                <input class="auth-input" type="password" id="auth-password" placeholder="비밀번호 (6자리 이상)" autocomplete="current-password">
+            </div>
             <p class="auth-error" id="auth-error"></p>
-            <button class="auth-btn" id="auth-submit">로그인</button>
+            <button class="auth-btn" id="auth-submit">
+                <span id="auth-btn-text">로그인</span>
+                <span class="auth-spinner" id="auth-spinner" style="display:none"></span>
+            </button>
         </div>
     </div>
 </div>
 
+<!-- ════════════════════════════════════════════
+     앱 Shell
+════════════════════════════════════════════ -->
 <div class="app-shell" id="app-shell" style="display:none">
 
-    <!-- ── Screen: 홈 (목표 진행도) ── -->
+    <!-- ── 홈 ── -->
     <div class="screen" id="screen-home">
         <div class="container" id="home-content"></div>
     </div>
 
-    <!-- ── Screen: 예상소비 목록 ── -->
+    <!-- ── 예상소비 ── -->
     <div class="screen screen--tab" id="screen-transactions">
         <div class="container" id="transactions-content"></div>
     </div>
 
-    <!-- ── Screen: 통계 ── -->
+    <!-- ── 통계 ── -->
     <div class="screen screen--tab" id="screen-stats">
         <div class="container" id="stats-content"></div>
     </div>
 
-    <!-- ── Screen: 목표 상세 ── -->
+    <!-- ── 설정 ── -->
+    <div class="screen screen--tab" id="screen-settings">
+        <div class="container" id="settings-content"></div>
+    </div>
+
+    <!-- ── 목표 상세 ── -->
     <div class="screen" id="screen-detail">
         <div id="detail-header-slot"></div>
         <div class="container" id="detail-content"></div>
@@ -72,7 +88,7 @@
     <button class="nav-item" id="nav-transactions" data-tab="transactions">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="5" y="2" width="14" height="20" rx="2"/>
-            <line x1="9" y1="7" x2="15" y2="7"/>
+            <line x1="9" y1="7"  x2="15" y2="7"/>
             <line x1="9" y1="11" x2="15" y2="11"/>
             <line x1="9" y1="15" x2="12" y2="15"/>
         </svg>
@@ -86,12 +102,19 @@
         </svg>
         <span class="nav-label">통계</span>
     </button>
+    <button class="nav-item" id="nav-settings" data-tab="settings">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span class="nav-label">설정</span>
+    </button>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="FinancialGoalCard.js"></script>
 <script src="mockData.js"></script>
 <script type="module" src="auth.js"></script>
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
