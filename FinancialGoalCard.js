@@ -1,5 +1,5 @@
 /**
- * FinancialGoalCard - Web Component (Dark Glassmorphism Theme)
+ * FinancialGoalCard - Web Component (Toss × Apple Light Theme)
  *
  * Attributes:
  *   goal-name       : 목표 이름
@@ -31,59 +31,52 @@ class FinancialGoalCard extends HTMLElement {
                     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
                                  "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                     -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
                 }
 
                 .card {
                     position: relative;
-                    background: rgba(255,255,255,0.035);
-                    backdrop-filter: blur(24px) saturate(1.4);
-                    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+                    background: #FFFFFF;
                     border-radius: 20px;
-                    padding: 26px 24px 22px;
-                    border: 1px solid rgba(255,255,255,0.09);
-                    box-shadow:
-                        0 8px 32px rgba(0,0,0,0.45),
-                        inset 0 1px 0 rgba(255,255,255,0.08);
+                    padding: 22px 20px 20px;
+                    border: none;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(60,60,67,0.08);
                     overflow: hidden;
-                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    transition: transform 0.25s ease, box-shadow 0.25s ease;
                     box-sizing: border-box;
                 }
 
-                /* 카드 내 배경 하이라이트 */
+                .card:hover {
+                    transform: scale(1.012);
+                    box-shadow: 0 6px 24px rgba(0,0,0,0.10), 0 0 0 0.5px rgba(60,60,67,0.10);
+                }
+
+                /* 카드 상단 오른쪽 컬러 힌트 */
                 .card::before {
                     content: '';
                     position: absolute;
-                    top: -60px; right: -60px;
-                    width: 200px; height: 200px;
-                    background: radial-gradient(circle, rgba(79,172,254,0.08) 0%, transparent 60%);
+                    top: -40px; right: -40px;
+                    width: 140px; height: 140px;
+                    background: radial-gradient(circle, rgba(0,102,255,0.06) 0%, transparent 65%);
                     pointer-events: none;
-                }
-
-                .card:hover {
-                    transform: scale(1.015);
-                    box-shadow:
-                        0 12px 40px rgba(0,0,0,0.55),
-                        0 0 30px rgba(79,172,254,0.10),
-                        inset 0 1px 0 rgba(255,255,255,0.10);
                 }
 
                 .goal-label {
                     font-size: 10px;
                     font-weight: 700;
-                    color: rgba(107,120,152,0.9);
+                    color: #8E8E93;
                     text-transform: uppercase;
                     letter-spacing: 1px;
-                    margin: 0 0 10px 0;
+                    margin: 0 0 8px 0;
                 }
 
                 .goal-title {
-                    font-size: 22px;
+                    font-size: 18px;
                     font-weight: 700;
-                    color: #e8edf5;
-                    letter-spacing: -0.5px;
-                    margin: 0 0 6px 0;
-                    line-height: 1.2;
-                    /* 긴 텍스트 처리 */
+                    color: #1A1A1F;
+                    letter-spacing: -0.3px;
+                    margin: 0 0 4px 0;
+                    line-height: 1.25;
                     display: -webkit-box;
                     -webkit-line-clamp: 2;
                     -webkit-box-orient: vertical;
@@ -91,62 +84,58 @@ class FinancialGoalCard extends HTMLElement {
                 }
 
                 .goal-amount {
-                    font-size: 28px;
+                    font-size: 24px;
                     font-weight: 800;
-                    letter-spacing: -0.8px;
-                    margin: 0 0 24px 0;
-                    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                    filter: drop-shadow(0 0 12px rgba(79,172,254,0.35));
+                    letter-spacing: -0.6px;
+                    margin: 0 0 20px 0;
+                    color: #0066FF;
                 }
 
                 .progress-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: flex-end;
-                    margin-bottom: 10px;
+                    margin-bottom: 8px;
                 }
 
                 .progress-label {
                     font-size: 11px;
-                    font-weight: 700;
-                    color: rgba(107,120,152,0.8);
+                    font-weight: 600;
+                    color: #8E8E93;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
                 }
 
                 .progress-percentage {
-                    font-size: 20px;
+                    font-size: 18px;
                     font-weight: 800;
-                    color: #e8edf5;
-                    letter-spacing: -0.5px;
+                    color: #1A1A1F;
+                    letter-spacing: -0.4px;
                 }
 
                 .progress-bar {
-                    height: 10px;
-                    background: rgba(255,255,255,0.07);
-                    border-radius: 5px;
+                    height: 8px;
+                    background: rgba(0,102,255,0.08);
+                    border-radius: 4px;
                     overflow: hidden;
-                    border: 1px solid rgba(255,255,255,0.05);
                 }
 
                 .progress-fill {
                     height: 100%;
                     background: linear-gradient(90deg,
                         #0047cc 0%,
-                        #4facfe 30%,
-                        #00e5ff 60%,
-                        #4facfe 80%,
+                        #0066ff 25%,
+                        #4facfe 55%,
+                        #00e5ff 75%,
+                        #0066ff 90%,
                         #0047cc 100%
                     );
                     background-size: 300% 100%;
-                    border-radius: 5px;
+                    border-radius: 4px;
                     width: 0%;
                     transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-                    box-shadow: 0 0 12px rgba(79,172,254,0.5);
-                    will-change: width, background-position, box-shadow;
+                    box-shadow: 0 0 8px rgba(0,102,255,0.35);
+                    will-change: width, background-position;
                     animation: aurora 3.5s ease-in-out infinite;
                 }
 
@@ -156,14 +145,13 @@ class FinancialGoalCard extends HTMLElement {
                     100% { background-position:   0% 50%; }
                 }
 
-                /* ── 구간별 펄스 ── */
                 .progress-fill.pulse-subtle {
                     animation: aurora 3.5s ease-in-out infinite,
                                glow-subtle 1.8s ease-in-out infinite;
                 }
                 @keyframes glow-subtle {
-                    0%,100% { box-shadow: 0 0  8px rgba(79,172,254,0.40); }
-                    50%     { box-shadow: 0 0 22px rgba(79,172,254,0.70); }
+                    0%,100% { box-shadow: 0 0 6px rgba(0,102,255,0.30); }
+                    50%     { box-shadow: 0 0 18px rgba(0,102,255,0.55); }
                 }
 
                 .progress-fill.pulse-clear {
@@ -171,8 +159,8 @@ class FinancialGoalCard extends HTMLElement {
                                glow-clear 1.1s ease-in-out infinite;
                 }
                 @keyframes glow-clear {
-                    0%,100% { box-shadow: 0 0 10px rgba(79,172,254,0.50); }
-                    50%     { box-shadow: 0 0 32px rgba(0,226,255,0.90); }
+                    0%,100% { box-shadow: 0 0 8px rgba(0,102,255,0.40); }
+                    50%     { box-shadow: 0 0 26px rgba(0,150,255,0.75); }
                 }
 
                 .progress-fill.pulse-peak {
@@ -180,8 +168,8 @@ class FinancialGoalCard extends HTMLElement {
                                glow-peak 0.7s ease-in-out infinite;
                 }
                 @keyframes glow-peak {
-                    0%,100% { box-shadow: 0 0 14px rgba(79,172,254,0.60); }
-                    50%     { box-shadow: 0 0 48px rgba(0,240,255,1.00); }
+                    0%,100% { box-shadow: 0 0 10px rgba(0,102,255,0.50); }
+                    50%     { box-shadow: 0 0 36px rgba(0,180,255,0.90); }
                 }
             </style>
 
