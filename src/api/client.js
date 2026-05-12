@@ -6,7 +6,11 @@ export function getToken() { return localStorage.getItem(TOKEN_KEY); }
 export function setToken(token) { localStorage.setItem(TOKEN_KEY, token); }
 export function clearToken() { localStorage.removeItem(TOKEN_KEY); }
 
-async function request(method, path, body) {
+// auth.js에서 등록하는 토큰 갱신 함수 (Firebase getIdToken 또는 커스텀 refresh)
+let _tokenRefresher = null;
+export function setTokenRefresher(fn) { _tokenRefresher = fn; }
+
+async function request(method, path, body, _isRetry = false) {
     const token = getToken();
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -23,6 +27,15 @@ async function request(method, path, body) {
             new Error('네트워크에 연결할 수 없어요. 인터넷 연결을 확인해주세요.'),
             { status: 0 }
         );
+    }
+
+    // 401: 토큰 만료 → 갱신 후 1회 재시도
+    if (res.status === 401 && !_isRetry && _tokenRefresher) {
+        const newToken = await _tokenRefresher().catch(() => null);
+        if (newToken) {
+            setToken(newToken);
+            return request(method, path, body, true);
+        }
     }
 
     if (!res.ok) {

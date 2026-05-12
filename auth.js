@@ -1,4 +1,6 @@
-import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "./firebase.js";
+import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, onIdTokenChanged } from "./firebase.js";
+import { setToken, clearToken, setTokenRefresher } from './src/api/client.js';
+import { USE_BACKEND, AUTH_MODE } from './src/config.js';
 
 const authScreen = document.getElementById('auth-screen');
 const appShell   = document.getElementById('app-shell');
@@ -14,7 +16,7 @@ const nameGroup  = document.getElementById('auth-name-group');
 let isLoginMode = true;
 
 function setLoading(loading) {
-    submitBtn.disabled = loading;
+    submitBtn.disabled     = loading;
     btnText.style.display  = loading ? 'none' : '';
     spinner.style.display  = loading ? '' : 'none';
 }
@@ -77,6 +79,32 @@ document.getElementById('auth-form').addEventListener('keydown', e => {
     if (e.key === 'Enter') submitBtn.click();
 });
 
+/* ── 토큰 파이프라인 (USE_BACKEND + firebase 모드) ────────────────────────
+ *
+ * onIdTokenChanged는 onAuthStateChanged와 동일하게 로그인/로그아웃 시 발화하며,
+ * 추가로 Firebase가 1시간마다 ID 토큰을 자동 갱신할 때도 발화합니다.
+ * 이를 이용해 항상 최신 토큰이 client.js에 유지되도록 합니다.
+ *
+ * custom-jwt 방식으로 전환 시:
+ *   1. AUTH_MODE = 'custom-jwt' 로 변경 (src/config.js)
+ *   2. submitBtn 핸들러에서 Firebase 대신 backendAuthApi.signin() 호출
+ *   3. 이 블록은 더 이상 실행되지 않음
+ */
+if (USE_BACKEND && AUTH_MODE === 'firebase') {
+    // 401 발생 시 client.js가 호출할 토큰 갱신 함수 등록
+    setTokenRefresher(() => auth.currentUser?.getIdToken(true) ?? Promise.resolve(null));
+
+    onIdTokenChanged(auth, async user => {
+        if (user) {
+            const token = await user.getIdToken();
+            setToken(token);
+        } else {
+            clearToken();
+        }
+    });
+}
+
+/* ── 인증 상태 → UI 표시/숨김 ─────────────────────────────────────────── */
 onAuthStateChanged(auth, user => {
     if (user) {
         authScreen.style.display = 'none';
