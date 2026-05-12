@@ -5,63 +5,71 @@ import { renderDetail }       from './src/screens/DetailScreen.js';
 import { renderSettings }     from './src/screens/SettingsScreen.js';
 import { showToast }          from './src/components/Toast.js';
 import { showModal, showAlert, showGoalSelector } from './src/components/Modal.js';
-import { loadData, getData, setData, loadSettings, getSettings, saveSettings, resetAll } from './src/store.js';
-import { SLIDE_DURATION }     from './src/config.js';
+import { initData, getData, setCache, loadSettings, getSettings, saveSettings, clearSettings } from './src/store.js';
+import { goalsApi }   from './src/api/goals.api.js';
+import { spendingApi } from './src/api/spending.api.js';
+import { STORAGE_KEY, SLIDE_DURATION } from './src/config.js';
 
-/* ── 초기화 ─────────────────────────────────────────────── */
-const appData    = loadData(window.mockData);
-const appSettings = loadSettings();
-let currentUser  = null;
-let currentTab   = 'home';
+let currentUser    = null;
+let currentTab     = 'home';
 let selectedGoalId = null;
 
-const shell    = document.getElementById('app-shell');
-const homeEl   = document.getElementById('home-content');
-const transEl  = document.getElementById('transactions-content');
-const statsEl  = document.getElementById('stats-content');
+const shell      = document.getElementById('app-shell');
+const homeEl     = document.getElementById('home-content');
+const transEl    = document.getElementById('transactions-content');
+const statsEl    = document.getElementById('stats-content');
 const settingsEl = document.getElementById('settings-content');
 
-/* ── 상태 헬퍼 ──────────────────────────────────────────── */
+/* ── 상태 헬퍼 ──────────────────────────────────────── */
 function getState() {
     return { data: getData(), settings: getSettings(), user: currentUser };
 }
 
-function nextGoalId() {
-    return getData().goals.reduce((max, g) => Math.max(max, g.id), 0) + 1;
-}
-function nextSpendingId() {
-    return getData().expected_spending.reduce((max, i) => Math.max(max, i.id), 0) + 1;
+/* ── 화면 렌더링 ────────────────────────────────────── */
+function refresh(screen) {
+    const s = getState();
+    if (screen === 'home')         renderHome(homeEl, s, actions);
+    if (screen === 'transactions') renderTransactions(transEl, s, actions);
+    if (screen === 'stats')        renderStats(statsEl, s);
+    if (screen === 'settings')     renderSettings(settingsEl, s, actions);
 }
 
-/* ── 액션 ───────────────────────────────────────────────── */
+/* ── 앱 초기화 (비동기) ─────────────────────────────── */
+async function startApp() {
+    loadSettings();
+    try {
+        await initData(window.mockData);
+    } catch (e) {
+        console.error('데이터 로드 실패:', e);
+        showToast('데이터를 불러오지 못했어요. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    history.replaceState({ screen: 'home' }, '', '');
+    refresh('home');
+    refresh('transactions');
+    refresh('stats');
+    refresh('settings');
+}
+
+/* ── 액션 ───────────────────────────────────────────── */
 const actions = {
     navigateTo,
     navigateBack,
     switchTab,
 
     async addGoal({ name, target_amount, endDate }) {
-        const data = getData();
-        data.goals.push({
-            id:             nextGoalId(),
-            name,
-            target_amount,
-            current_amount: 0,
-            endDate:        endDate || '',
-            detail: {
-                screen_title:         `${name} 상세`,
-                history_section_title: '카테고리별 절약 내역',
-                billing_period:       { start: new Date().toLocaleDateString('ko-KR').replace(/ /g, ''), end: '', total_save_count: 0 },
-                saving_history:       [],
-            },
-        });
-        setData({ goals: data.goals });
-        refresh('home');
-        showToast('새 목표가 추가됐어요! 🎯', 'success');
+        try {
+            const goal = await goalsApi.create({ name, target_amount, endDate });
+            setCache({ goals: [...getData().goals, goal] });
+            refresh('home');
+            showToast('새 목표가 추가됐어요! 🎯', 'success');
+        } catch (e) {
+            showToast(e.message || '목표 추가 중 오류가 발생했어요.', 'error');
+        }
     },
 
     async deleteGoal(goalId) {
-        const data = getData();
-        const goal = data.goals.find(g => g.id === goalId);
+        const goal = getData().goals.find(g => g.id === goalId);
         if (!goal) return;
         const ok = await showModal({
             title:       `"${goal.name}"`,
@@ -72,14 +80,19 @@ const actions = {
             icon:        '🗑️',
         });
         if (!ok) return;
-        setData({ goals: data.goals.filter(g => g.id !== goalId) });
-        refresh('home');
-        showToast('목표가 삭제됐어요.', 'warning');
+        try {
+            await goalsApi.delete(goalId);
+            setCache({ goals: getData().goals.filter(g => g.id !== goalId) });
+            refresh('home');
+            showToast('목표가 삭제됐어요.', 'warning');
+        } catch (e) {
+            showToast(e.message || '목표 삭제 중 오류가 발생했어요.', 'error');
+        }
     },
 
     async saveSpending(spendingId) {
-        const data  = getData();
-        const item  = data.expected_spending.find(i => i.id === spendingId);
+        const data = getData();
+        const item = data.expected_spending.find(i => i.id === spendingId);
         if (!item) return;
 
         let goalId = null;
@@ -94,61 +107,69 @@ const actions = {
             if (!goalId) return;
         }
 
-        const goal = data.goals.find(g => g.id === goalId);
+        const goal    = data.goals.find(g => g.id === goalId);
         if (!goal) return;
-
         const prevPct = Math.floor(((goal.current_amount || 0) / goal.target_amount) * 100);
 
-        goal.current_amount = (goal.current_amount || 0) + item.amount;
-        data.expected_spending = data.expected_spending.filter(i => i.id !== spendingId);
+        try {
+            // spending 삭제 → goal에 저축 기록 (sequential: 두 mock 모두 localStorage 접근)
+            await spendingApi.delete(spendingId);
+            const updatedGoal = await goalsApi.addSaving(goalId, {
+                amount:   item.amount,
+                category: item.category,
+                icon:     item.icon,
+            });
 
-        const history = goal.detail.saving_history;
-        const existing = history.find(h => h.category === item.category);
-        if (existing) {
-            existing.save_count   += 1;
-            existing.total_saved  += item.amount;
-        } else {
-            history.push({ id: history.length + 1, category: item.category, icon: item.icon || 'etc', save_count: 1, total_saved: item.amount });
-        }
+            setCache({
+                goals:            getData().goals.map(g => g.id === goalId ? updatedGoal : g),
+                expected_spending: getData().expected_spending.filter(i => i.id !== spendingId),
+            });
 
-        setData({ goals: data.goals, expected_spending: data.expected_spending });
+            const newPct = Math.floor((updatedGoal.current_amount / updatedGoal.target_amount) * 100);
+            if (prevPct < 100 && newPct >= 100)
+                setTimeout(() => showToast(`"${goal.name}" 목표 달성! 축하합니다!`, 'success', 4000), 300);
+            else if (prevPct < 80 && newPct >= 80)
+                setTimeout(() => showToast(`"${goal.name}" 80% 달성! 거의 다 왔어요!`, 'info'), 300);
+            else
+                showToast(`${item.amount.toLocaleString('ko-KR')}원 절약 완료!`, 'success');
 
-        const newPct = Math.floor((goal.current_amount / goal.target_amount) * 100);
-        if (prevPct < 100 && newPct >= 100)
-            setTimeout(() => showToast(`🎉 "${goal.name}" 목표 달성! 축하합니다!`, 'success', 4000), 300);
-        else if (prevPct < 80 && newPct >= 80)
-            setTimeout(() => showToast(`💪 "${goal.name}" 80% 달성! 거의 다 왔어요!`, 'info'), 300);
-        else
-            showToast(`💸 ${item.amount.toLocaleString('ko-KR')}원 절약 완료!`, 'success');
-
-        refresh('transactions');
-        refresh('home');
-        if (currentTab === 'stats') refresh('stats');
-        if (selectedGoalId === goalId) {
-            const updatedGoal = getData().goals.find(g => g.id === goalId);
-            if (updatedGoal) renderDetail(
-                document.getElementById('detail-header-slot'),
-                document.getElementById('detail-content'),
-                updatedGoal,
-                actions
-            );
+            refresh('transactions');
+            refresh('home');
+            if (currentTab === 'stats') refresh('stats');
+            if (selectedGoalId === goalId) {
+                renderDetail(
+                    document.getElementById('detail-header-slot'),
+                    document.getElementById('detail-content'),
+                    updatedGoal,
+                    actions
+                );
+            }
+        } catch (e) {
+            showToast(e.message || '저축 처리 중 오류가 발생했어요.', 'error');
         }
     },
 
     async deleteSpending(id) {
-        const data = getData();
-        setData({ expected_spending: data.expected_spending.filter(i => i.id !== id) });
-        refresh('transactions');
-        refresh('home');
+        try {
+            await spendingApi.delete(id);
+            setCache({ expected_spending: getData().expected_spending.filter(i => i.id !== id) });
+            refresh('transactions');
+            refresh('home');
+        } catch (e) {
+            showToast(e.message || '삭제 중 오류가 발생했어요.', 'error');
+        }
     },
 
     async addSpending({ category, icon, time, period, amount }) {
-        const data = getData();
-        data.expected_spending.push({ id: nextSpendingId(), category, icon, time, period, amount });
-        setData({ expected_spending: data.expected_spending });
-        refresh('transactions');
-        refresh('home');
-        showToast('소비 항목이 추가됐어요.', 'info');
+        try {
+            const item = await spendingApi.create({ category, icon, time, period, amount });
+            setCache({ expected_spending: [...getData().expected_spending, item] });
+            refresh('transactions');
+            refresh('home');
+            showToast('소비 항목이 추가됐어요.', 'info');
+        } catch (e) {
+            showToast(e.message || '항목 추가 중 오류가 발생했어요.', 'error');
+        }
     },
 
     updateSettings(updates) {
@@ -157,7 +178,12 @@ const actions = {
     },
 
     async logout() {
-        const ok = await showModal({ title: '로그아웃', message: '정말 로그아웃 할까요?', confirmText: '로그아웃', cancelText: '취소' });
+        const ok = await showModal({
+            title:       '로그아웃',
+            message:     '정말 로그아웃 할까요?',
+            confirmText: '로그아웃',
+            cancelText:  '취소',
+        });
         if (!ok) return;
         const { auth, signOut } = await import('./auth.js');
         await signOut(auth);
@@ -173,7 +199,10 @@ const actions = {
             icon:        '⚠️',
         });
         if (!ok) return;
-        resetAll(window.mockData);
+        localStorage.removeItem(STORAGE_KEY);
+        clearSettings();
+        await initData(window.mockData);
+        loadSettings();
         refresh('home');
         refresh('transactions');
         refresh('stats');
@@ -182,19 +211,9 @@ const actions = {
     },
 };
 
-/* ── 화면 렌더링 ────────────────────────────────────────── */
-function refresh(screen) {
-    const s = getState();
-    if (screen === 'home')         renderHome(homeEl, s, actions);
-    if (screen === 'transactions') renderTransactions(transEl, s, actions);
-    if (screen === 'stats')        renderStats(statsEl, s);
-    if (screen === 'settings')     renderSettings(settingsEl, s, actions);
-}
-
-/* ── 탭 전환 ────────────────────────────────────────────── */
+/* ── 탭 전환 ────────────────────────────────────────── */
 function switchTab(tab) {
     if (currentTab === tab) return;
-
     if (currentTab === 'stats') destroyChart();
     currentTab = tab;
 
@@ -210,7 +229,7 @@ function switchTab(tab) {
     });
 }
 
-/* ── 상세 화면 라우팅 ───────────────────────────────────── */
+/* ── 상세 화면 라우팅 ───────────────────────────────── */
 function navigateTo(screenName, goalId) {
     if (screenName !== 'detail') return;
     selectedGoalId = goalId;
@@ -229,9 +248,7 @@ function navigateTo(screenName, goalId) {
     setTimeout(() => shell.classList.remove('transitioning'), SLIDE_DURATION);
 }
 
-function navigateBack() {
-    history.back();
-}
+function navigateBack() { history.back(); }
 
 window.addEventListener('popstate', e => {
     const state = e.state;
@@ -255,20 +272,19 @@ window.addEventListener('popstate', e => {
     }
 });
 
-/* ── 네비게이션 이벤트 ──────────────────────────────────── */
+/* ── 네비게이션 이벤트 ──────────────────────────────── */
 document.getElementById('nav-home').addEventListener('click',         () => switchTab('home'));
 document.getElementById('nav-transactions').addEventListener('click', () => switchTab('transactions'));
 document.getElementById('nav-stats').addEventListener('click',        () => switchTab('stats'));
 document.getElementById('nav-settings').addEventListener('click',     () => switchTab('settings'));
 
-/* ── 외부에서 user 주입 (auth.js 가 호출) ──────────────── */
+/* ── auth.js 브릿지 ─────────────────────────────────── */
 window.__setCurrentUser = function(user) {
     currentUser = user;
+    if (user) {
+        startApp().catch(err => {
+            console.error('앱 초기화 실패:', err);
+            showToast('앱 초기화 중 오류가 발생했어요.', 'error');
+        });
+    }
 };
-
-/* ── 최초 렌더링 ────────────────────────────────────────── */
-history.replaceState({ screen: 'home' }, '', '');
-refresh('home');
-refresh('transactions');
-refresh('stats');
-refresh('settings');

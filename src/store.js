@@ -1,36 +1,33 @@
-import { STORAGE_KEY, SETTINGS_KEY, DEFAULT_SETTINGS } from './config.js';
+import { STORAGE_KEY, SETTINGS_KEY, DEFAULT_SETTINGS, USE_BACKEND } from './config.js';
+import { goalsApi }   from './api/goals.api.js';
+import { spendingApi } from './api/spending.api.js';
 
-let _data = null;
+// 메모리 캐시 (렌더링용 동기 읽기)
+let _data     = { goals: [], expected_spending: [] };
 let _settings = null;
 
-export function loadData(fallback) {
-    try {
+// ── 비동기 초기화 ─────────────────────────────────────
+// fallback: mock 모드에서 localStorage가 비어있을 때 seed 데이터
+export async function initData(fallback) {
+    if (!USE_BACKEND && fallback) {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (!Array.isArray(parsed.goals)) parsed.goals = fallback.goals;
-            if (!Array.isArray(parsed.expected_spending)) parsed.expected_spending = fallback.expected_spending;
-            _data = parsed;
-            return _data;
+        if (!saved) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
         }
-    } catch (_) {}
-    _data = { ...fallback };
-    persistData();
+    }
+    const [goals, spending] = await Promise.all([
+        goalsApi.getAll(),
+        spendingApi.getToday(),
+    ]);
+    _data = { goals, expected_spending: spending };
     return _data;
 }
 
-export function getData() { return _data; }
+// ── 동기 캐시 읽기/쓰기 ──────────────────────────────
+export function getData()         { return _data; }
+export function setCache(updates) { _data = { ..._data, ...updates }; }
 
-export function setData(updates) {
-    _data = { ..._data, ...updates };
-    persistData();
-    return _data;
-}
-
-export function persistData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(_data));
-}
-
+// ── 설정 (localStorage 유지) ──────────────────────────
 export function loadSettings() {
     try {
         const saved = localStorage.getItem(SETTINGS_KEY);
@@ -51,10 +48,7 @@ export function saveSettings(updates) {
     return _settings;
 }
 
-export function resetAll(fallback) {
-    localStorage.removeItem(STORAGE_KEY);
+export function clearSettings() {
     localStorage.removeItem(SETTINGS_KEY);
-    _data = null;
     _settings = null;
-    return loadData(fallback);
 }
