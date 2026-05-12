@@ -8,6 +8,7 @@ import { showModal, showAlert, showGoalSelector } from './src/components/Modal.j
 import { initData, getData, setCache, loadSettings, getSettings, saveSettings, clearSettings } from './src/store.js';
 import { goalsApi }   from './src/api/goals.api.js';
 import { spendingApi } from './src/api/spending.api.js';
+import { skeletonHome, skeletonTransactions, skeletonStats } from './src/components/Skeleton.js';
 import { STORAGE_KEY, SLIDE_DURATION } from './src/config.js';
 
 let currentUser    = null;
@@ -37,6 +38,12 @@ function refresh(screen) {
 /* ── 앱 초기화 (비동기) ─────────────────────────────── */
 async function startApp() {
     loadSettings();
+
+    // 데이터 로드 전 스켈레톤 즉시 렌더링
+    homeEl.innerHTML         = skeletonHome();
+    transEl.innerHTML        = skeletonTransactions();
+    statsEl.innerHTML        = skeletonStats();
+
     try {
         await initData(window.mockData);
     } catch (e) {
@@ -44,12 +51,20 @@ async function startApp() {
         showToast('데이터를 불러오지 못했어요. 잠시 후 다시 시도해주세요.', 'error');
         return;
     }
+
     history.replaceState({ screen: 'home' }, '', '');
     refresh('home');
     refresh('transactions');
     refresh('stats');
     refresh('settings');
 }
+
+/* ── 처리되지 않은 Promise 에러 글로벌 캐치 ─────────── */
+window.addEventListener('unhandledrejection', e => {
+    const msg = e.reason?.message;
+    if (msg) showToast(msg, 'error');
+    e.preventDefault();
+});
 
 /* ── 액션 ───────────────────────────────────────────── */
 const actions = {

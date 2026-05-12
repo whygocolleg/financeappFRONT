@@ -89,12 +89,27 @@ export function renderTransactions(container, state, actions) {
 
     /* 절약완료 */
     container.querySelectorAll('.btn-save').forEach(btn => {
-        btn.addEventListener('click', e => { e.stopPropagation(); actions.saveSpending(Number(btn.dataset.id)); });
+        btn.addEventListener('click', async e => {
+            e.stopPropagation();
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.classList.add('btn-loading');
+            await actions.saveSpending(Number(btn.dataset.id));
+            if (btn.isConnected) {
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+            }
+        });
     });
 
     /* 소비 삭제 */
     container.querySelectorAll('.btn-del-spending').forEach(btn => {
-        btn.addEventListener('click', e => { e.stopPropagation(); actions.deleteSpending(Number(btn.dataset.id)); });
+        btn.addEventListener('click', async e => {
+            e.stopPropagation();
+            if (btn.disabled) return;
+            btn.disabled = true;
+            await actions.deleteSpending(Number(btn.dataset.id));
+        });
     });
 
     /* 추가 폼 */
@@ -119,7 +134,7 @@ export function renderTransactions(container, state, actions) {
         e.target.value = v;
     });
 
-    container.querySelector('#sp-confirm').addEventListener('click', () => {
+    container.querySelector('#sp-confirm').addEventListener('click', async () => {
         const category = container.querySelector('#sp-category').value.trim();
         const icon     = container.querySelector('#sp-icon').value;
         const timeVal  = container.querySelector('#sp-time').value || '12:00';
@@ -146,7 +161,14 @@ export function renderTransactions(container, state, actions) {
         const displayHour = hh % 12 || 12;
         const displayTime = `${displayHour}:${timeVal.split(':')[1]}`;
 
-        actions.addSpending({ category, icon, time: displayTime, period, amount });
+        const btn = container.querySelector('#sp-confirm');
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        await actions.addSpending({ category, icon, time: displayTime, period, amount });
+        if (btn.isConnected) {
+            btn.disabled = false;
+            btn.classList.remove('btn-loading');
+        }
     });
 }
 

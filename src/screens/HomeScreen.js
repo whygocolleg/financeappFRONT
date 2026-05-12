@@ -129,7 +129,7 @@ export function renderHome(container, state, actions) {
         e.target.value = v;
     });
 
-    container.querySelector('#btn-confirm-goal').addEventListener('click', () => {
+    container.querySelector('#btn-confirm-goal').addEventListener('click', async () => {
         const name    = container.querySelector('#new-goal-name').value.trim();
         const amtStr  = container.querySelector('#new-goal-amount').value;
         const endDate = container.querySelector('#new-goal-end-date').value || '';
@@ -150,7 +150,14 @@ export function renderHome(container, state, actions) {
         }
         if (!ok) return;
 
-        actions.addGoal({ name, target_amount: amount, endDate });
+        const btn = container.querySelector('#btn-confirm-goal');
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        await actions.addGoal({ name, target_amount: amount, endDate });
+        if (btn.isConnected) {
+            btn.disabled = false;
+            btn.classList.remove('btn-loading');
+        }
     });
 }
 

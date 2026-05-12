@@ -1,23 +1,29 @@
+import { API_BASE_URL } from '../config.js';
+
 const TOKEN_KEY = 'finance_jwt';
 
 export function getToken() { return localStorage.getItem(TOKEN_KEY); }
 export function setToken(token) { localStorage.setItem(TOKEN_KEY, token); }
 export function clearToken() { localStorage.removeItem(TOKEN_KEY); }
 
-export function getApiBase() {
-    return window.APP_CONFIG?.apiBaseUrl || 'http://localhost:3000';
-}
-
 async function request(method, path, body) {
     const token = getToken();
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`${getApiBase()}${path}`, {
-        method,
-        headers,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    let res;
+    try {
+        res = await fetch(`${API_BASE_URL}${path}`, {
+            method,
+            headers,
+            body: body !== undefined ? JSON.stringify(body) : undefined,
+        });
+    } catch {
+        throw Object.assign(
+            new Error('네트워크에 연결할 수 없어요. 인터넷 연결을 확인해주세요.'),
+            { status: 0 }
+        );
+    }
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));

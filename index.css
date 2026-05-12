@@ -676,6 +676,39 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ════════════════════════════════════════════
+   스켈레톤 UI
+════════════════════════════════════════════ */
+.skel {
+    display: block;
+    background: linear-gradient(90deg, #EBEBEB 0%, #D8D8D8 50%, #EBEBEB 100%);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skel-shimmer {
+    0%   { background-position:  200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* 버튼 로딩 상태 */
+.btn-loading {
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+.btn-loading::after {
+    content: '';
+    display: inline-block;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    animation: spin 0.65s linear infinite;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* ════════════════════════════════════════════
    토스트
 ════════════════════════════════════════════ */
 .toast {
