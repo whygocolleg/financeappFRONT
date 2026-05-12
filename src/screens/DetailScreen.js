@@ -25,7 +25,15 @@ export function renderDetail(headerSlot, container, goal, actions) {
                 </div>
                 <span class="item-amount">${fmt(item.total_saved)}</span>
             </div>`).join('')
-        : `<div class="empty-state"><p class="empty-icon">💪</p><p class="empty-title">아직 절약 내역이 없어요</p><p class="empty-sub">예상소비 탭에서 절약완료를 눌러 시작하세요!</p></div>`;
+        : `<div class="empty-state">
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="36" cy="36" r="32" fill="#EEF4FF"/>
+                <path d="M36 20 C36 20 22 27 22 40 C22 47.7 28.3 53 36 53 C43.7 53 50 47.7 50 40 C50 27 36 20 36 20Z" stroke="#0066FF" stroke-width="1.8" fill="none" opacity="0.5"/>
+                <path d="M28 38 L33 43 L44 32" stroke="#0066FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="empty-title">아직 절약 내역이 없어요</p>
+            <p class="empty-sub">예상소비 탭에서 절약완료를 눌러 시작하세요!</p>
+           </div>`;
 
     const periodHTML = bp.end
         ? `<span class="pb-range">📅 ${bp.start} ~ ${bp.end}</span>`

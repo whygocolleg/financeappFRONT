@@ -47,7 +47,15 @@ export function renderTransactions(container, state, actions) {
                 </div>
             </div>`).join('')}
         </div>`
-        : `<div class="empty-state"><p class="empty-icon">🎉</p><p class="empty-title">모두 절약했어요!</p><p class="empty-sub">오늘 예상 소비를 전부 절약했어요.</p></div>`;
+        : `<div class="empty-state">
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="36" cy="36" r="32" fill="#EDFBF0"/>
+                <circle cx="36" cy="36" r="20" stroke="#34C759" stroke-width="1.5" fill="none" opacity="0.35"/>
+                <path d="M22 36 L31 45 L50 26" stroke="#34C759" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="empty-title">모두 절약했어요!</p>
+            <p class="empty-sub">오늘 예상 소비를 전부 절약했어요.</p>
+           </div>`;
 
     const iconOptions = ICON_OPTIONS.map(o =>
         `<option value="${o.value}">${o.label}</option>`

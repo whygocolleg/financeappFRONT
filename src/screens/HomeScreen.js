@@ -74,7 +74,21 @@ export function renderHome(container, state, actions) {
         <div class="goals-section">
             <h3 class="section-title">나의 목표 진행도</h3>
             <div class="goals-list" id="goals-list">
-                ${goalsHTML || `<div class="empty-state"><p class="empty-icon">🎯</p><p class="empty-title">목표가 없어요</p><p class="empty-sub">아래 버튼으로 첫 목표를 추가해 보세요!</p></div>`}
+                ${goalsHTML || `
+                <div class="empty-state">
+                    <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="36" cy="36" r="32" fill="#EEF4FF"/>
+                        <circle cx="36" cy="36" r="20" stroke="#0066FF" stroke-width="1.5" stroke-dasharray="4 3" fill="none" opacity="0.35"/>
+                        <circle cx="36" cy="36" r="11" stroke="#0066FF" stroke-width="2" fill="none"/>
+                        <circle cx="36" cy="36" r="4" fill="#0066FF"/>
+                        <line x1="36" y1="4" x2="36" y2="13" stroke="#AACCFF" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="36" y1="59" x2="36" y2="68" stroke="#AACCFF" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="4" y1="36" x2="13" y2="36" stroke="#AACCFF" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="59" y1="36" x2="68" y2="36" stroke="#AACCFF" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <p class="empty-title">목표가 없어요</p>
+                    <p class="empty-sub">아래 버튼으로 첫 목표를 추가해 보세요!</p>
+                </div>`}
             </div>
             <button class="btn-add-goal" id="btn-add-goal">
                 ${PLUS_ICON} 새로운 목표 추가하기

@@ -77,7 +77,16 @@ export function renderStats(container, state) {
             <div class="stats-category-list">${categoryRowsHTML}</div>
         </div>` : `
         <div class="empty-state" style="margin-top:24px">
-            <p class="empty-icon">📊</p>
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="36" cy="36" r="32" fill="#EEF4FF"/>
+                <rect x="16" y="40" width="10" height="16" rx="3" fill="#0066FF" opacity="0.18"/>
+                <rect x="31" y="30" width="10" height="26" rx="3" fill="#0066FF" opacity="0.45"/>
+                <rect x="46" y="35" width="10" height="21" rx="3" fill="#0066FF" opacity="0.25"/>
+                <line x1="14" y1="58" x2="58" y2="58" stroke="#0066FF" stroke-width="1.5" stroke-linecap="round" opacity="0.30"/>
+                <circle cx="52" cy="22" r="8" fill="#FF9500" opacity="0.9"/>
+                <line x1="52" y1="18" x2="52" y2="22" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="52" cy="25" r="1.2" fill="white"/>
+            </svg>
             <p class="empty-title">아직 절약 내역이 없어요</p>
             <p class="empty-sub">예상소비 탭에서 절약완료를 눌러보세요!</p>
         </div>`}
