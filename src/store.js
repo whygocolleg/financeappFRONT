@@ -3,7 +3,7 @@ import { goalsApi }   from './api/goals.api.js';
 import { spendingApi } from './api/spending.api.js';
 
 // 메모리 캐시 (렌더링용 동기 읽기)
-let _data     = { goals: [], expected_spending: [] };
+let _data     = { goals: [], expected_spending: [], analytics: null };
 let _settings = null;
 
 // ── 비동기 초기화 ─────────────────────────────────────
@@ -15,11 +15,12 @@ export async function initData(fallback) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
         }
     }
-    const [goals, spending] = await Promise.all([
+    const [goals, spending, analytics] = await Promise.all([
         goalsApi.getAll(),
         spendingApi.getToday(),
+        spendingApi.getAnalytics(),
     ]);
-    _data = { goals, expected_spending: spending };
+    _data = { goals, expected_spending: spending, analytics };
     return _data;
 }
 

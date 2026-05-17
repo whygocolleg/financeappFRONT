@@ -21,8 +21,8 @@ export class SpendingController {
 
   // GET /api/spending/analytics
   @Get('analytics')
-  getAnalytics(@Query('cycleDate') cycleDate: string) {
-    return this.spendingService.getAnalytics(cycleDate);
+  getAnalytics(@Req() req: any) {
+    return this.spendingService.getAnalytics(req.user.uid);
   }
 
   // DELETE /api/spending/:id

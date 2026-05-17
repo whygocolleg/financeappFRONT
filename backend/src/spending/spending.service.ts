@@ -32,8 +32,21 @@ export class SpendingService {
     return this.spendingRepo.save(item);
   }
 
-  async getAnalytics(_cycleDate: string): Promise<any> {
-    return [];
+  async getAnalytics(userId: string): Promise<any> {
+    const rows = await this.spendingRepo
+      .createQueryBuilder('spending')
+      .select('spending.category', 'category')
+      .addSelect('spending.icon', 'icon')
+      .addSelect('COUNT(*)', 'count')
+      .addSelect('SUM(spending.amount)', 'total')
+      .where('spending.user_id = :userId', { userId })
+      .groupBy('spending.category')
+      .addGroupBy('spending.icon')
+      .orderBy('SUM(spending.amount)', 'DESC')
+      .getRawMany();
+
+    const grandTotal = rows.reduce((s, r) => s + Number(r.total), 0);
+    return { total: grandTotal, by_category: rows };
   }
 
   async remove(id: string): Promise<void> {

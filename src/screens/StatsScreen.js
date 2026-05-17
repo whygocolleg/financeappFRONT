@@ -68,6 +68,9 @@ export function renderStats(container, state) {
             ${goalRowsHTML}
         </div>` : ''}
 
+        ${data.analytics?.by_category?.length > 0 ? `
+        <div class="card" id="stats-analytics" style="margin-top:16px"></div>` : ''}
+
         ${cats.length > 0 ? `
         <div class="card" style="margin-top:16px">
             <h3 class="section-title" style="margin-top:0">카테고리별 절약</h3>
@@ -91,6 +94,36 @@ export function renderStats(container, state) {
             <p class="empty-sub">예상소비 탭에서 절약완료를 눌러보세요!</p>
         </div>`}
     `;
+
+    // 지출 분석 섹션 렌더링
+    const analytics = data.analytics;
+    const analyticsEl = document.getElementById('stats-analytics');
+    if (analyticsEl && analytics?.by_category?.length > 0) {
+        const cats = analytics.by_category;
+        analyticsEl.innerHTML = `
+            <h3 class="section-title" style="margin-top:0">카테고리별 지출 분석</h3>
+            <p class="stats-total-label" style="margin-bottom:16px">
+                총 지출: <strong>${Number(analytics.total).toLocaleString('ko-KR')}원</strong>
+            </p>
+            ${cats.map((c, i) => {
+                const pct = Math.round((Number(c.total) / analytics.total) * 100);
+                return `
+                <div class="stats-category-row" style="flex-direction:column; align-items:stretch; gap:6px">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <span style="display:flex; align-items:center; gap:8px">
+                            <span class="stats-dot" style="background:${CHART_COLORS[i % CHART_COLORS.length]}"></span>
+                            <span class="stats-cat-name">${c.category}</span>
+                            <span class="stats-cat-count">${Number(c.count)}회</span>
+                        </span>
+                        <span class="stats-cat-amount">${Number(c.total).toLocaleString('ko-KR')}원</span>
+                    </div>
+                    <div style="height:6px; background:#f0f0f5; border-radius:3px; overflow:hidden">
+                        <div style="height:100%; width:${pct}%; background:${CHART_COLORS[i % CHART_COLORS.length]}; border-radius:3px; transition:width 0.6s ease"></div>
+                    </div>
+                </div>`;
+            }).join('')}
+        `;
+    }
 
     animateAmount('stats-amount-anim', totalSaved, 900);
 
