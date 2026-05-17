@@ -1,19 +1,35 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Goal } from './goal.entity';
 
 @Injectable()
 export class GoalsService {
-  async findAll() {
-    // TODO: 유저의 목표 목록 반환
-    return [];
+  constructor(
+    @InjectRepository(Goal)
+    private readonly goalRepo: Repository<Goal>,
+  ) {}
+
+  async findAll(userId: string): Promise<Goal[]> {
+    return this.goalRepo.find({ where: { user_id: userId } });
   }
 
-  async create(dto: any) {
-    // TODO: 신규 목표 생성
-    return {};
+  async create(dto: any, userId: string): Promise<Goal> {
+    const goal = this.goalRepo.create({
+      name: dto.name,
+      target_amount: dto.target_amount,
+      current_amount: 0,
+      endDate: dto.endDate,
+      user_id: userId,
+    });
+    return this.goalRepo.save(goal);
   }
 
-  async findOne(id: string) {
-    // TODO: 목표 상세 + 절약 통계 반환
-    return {};
+  async findOne(id: string): Promise<Goal> {
+    return this.goalRepo.findOne({ where: { id: Number(id) } });
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.goalRepo.delete(Number(id));
   }
 }

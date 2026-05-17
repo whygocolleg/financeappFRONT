@@ -9,6 +9,10 @@ dist/
 .env.local
 .env.*.local
 
+# Firebase service account (절대 git에 올리면 안 됨)
+firebase-service-account.json
+**/firebase-service-account.json
+
 # Logs
 *.log
 npm-debug.log*
