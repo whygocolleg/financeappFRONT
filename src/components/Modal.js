@@ -37,6 +37,7 @@ export function showModal({ title, message, confirmText = '확인', cancelText =
             <button class="modal-btn modal-btn--confirm modal-btn--${type}" id="modal-confirm">${confirmText}</button>
         `;
 
+        overlay.style.display = '';
         overlay.classList.add('modal-overlay--show');
         requestAnimationFrame(() => {
             document.getElementById('modal-sheet').classList.add('modal-sheet--show');
@@ -61,8 +62,7 @@ function closeModal(result) {
     overlay.classList.remove('modal-overlay--show');
     setTimeout(() => {
         overlay.style.display = 'none';
-        overlay.style.display = '';
-    }, 300);
+    }, 350);
     if (_resolveModal) {
         _resolveModal(result);
         _resolveModal = null;
