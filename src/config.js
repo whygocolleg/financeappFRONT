@@ -4,7 +4,7 @@
  *
  * 백엔드 연동 시 아래 한 줄만 true로 바꾸면 됩니다.
  */
-export const USE_BACKEND = true;
+export const USE_BACKEND = false;
 
 export const API_BASE_URL = 'http://localhost:3000';
 
